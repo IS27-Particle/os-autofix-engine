@@ -1,0 +1,296 @@
+{
+  "timestamp": 1786800150.5803545,
+  "formatted_time": "2026-08-15 13:22:30 UTC",
+  "model_name": "qwen2.5-coder:7b",
+  "backend": "ollama",
+  "total_episodes": 7,
+  "successful_episodes": 3,
+  "pass_rate": 0.42857142857142855,
+  "avg_reward": -0.1,
+  "avg_steps": 1.0,
+  "avg_duration_seconds": 26.694196312139475,
+  "scenarios": {
+    "network_routing": {
+      "total": 1,
+      "successful": 0,
+      "pass_rate": 0.0,
+      "avg_steps": 1.0,
+      "avg_reward": -0.1,
+      "avg_duration_seconds": 35.264260291005485,
+      "failures": [
+        {
+          "instance_id": "autofix-network-routing-107888",
+          "steps_taken": 1,
+          "message": "Routing verification failed (exit code 1): NO_VALID_DEFAULT_ROUTE\n",
+          "last_command": ""
+        }
+      ]
+    },
+    "package_corruption": {
+      "total": 1,
+      "successful": 0,
+      "pass_rate": 0.0,
+      "avg_steps": 1.0,
+      "avg_reward": -0.1,
+      "avg_duration_seconds": 35.382324442995014,
+      "failures": [
+        {
+          "instance_id": "autofix-package-corruption-1cf9bd",
+          "steps_taken": 1,
+          "message": "Package manager health check failed (code 2): APT_CHECK_FAILED\n",
+          "last_command": ""
+        }
+      ]
+    },
+    "systemd_dns": {
+      "total": 1,
+      "successful": 0,
+      "pass_rate": 0.0,
+      "avg_steps": 1.0,
+      "avg_reward": -0.1,
+      "avg_duration_seconds": 35.677824469981715,
+      "failures": [
+        {
+          "instance_id": "autofix-systemd-dns-2be146",
+          "steps_taken": 1,
+          "message": "DNS resolution failed. Stderr: \nStdout: DNS_ERROR: [Errno -3] Temporary failure in name resolution\n",
+          "last_command": ""
+        }
+      ]
+    },
+    "file_permissions": {
+      "total": 1,
+      "successful": 0,
+      "pass_rate": 0.0,
+      "avg_steps": 1.0,
+      "avg_reward": -0.1,
+      "avg_duration_seconds": 36.00462392499321,
+      "failures": [
+        {
+          "instance_id": "autofix-file-permissions-b05d3b",
+          "steps_taken": 1,
+          "message": "Permission verification failed (code 1): SUDOERS_INSECURE_PERMS: 777\n",
+          "last_command": ""
+        }
+      ]
+    },
+    "zfs_mount": {
+      "total": 1,
+      "successful": 1,
+      "pass_rate": 1.0,
+      "avg_steps": 1.0,
+      "avg_reward": -0.1,
+      "avg_duration_seconds": 14.54800275398884,
+      "failures": []
+    },
+    "docker_socket": {
+      "total": 1,
+      "successful": 1,
+      "pass_rate": 1.0,
+      "avg_steps": 1.0,
+      "avg_reward": -0.1,
+      "avg_duration_seconds": 14.700759058003314,
+      "failures": []
+    },
+    "iptables_lockout": {
+      "total": 1,
+      "successful": 1,
+      "pass_rate": 1.0,
+      "avg_steps": 1.0,
+      "avg_reward": -0.1,
+      "avg_duration_seconds": 15.281579244008753,
+      "failures": []
+    }
+  },
+  "episodes": [
+    {
+      "scenario_name": "network_routing",
+      "instance_id": "autofix-network-routing-107888",
+      "steps": [
+        {
+          "step_index": 1,
+          "state_observation": "LLM Error: Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "thought": "",
+          "command": "",
+          "timeout_seconds": 0,
+          "stdout": "",
+          "stderr": "Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "exit_code": 1,
+          "reward": -0.1,
+          "done": true,
+          "raw_model_completion": "",
+          "metadata": {}
+        }
+      ],
+      "success": false,
+      "total_reward": -0.1,
+      "duration_seconds": 35.264260291005485,
+      "verification_message": "Routing verification failed (exit code 1): NO_VALID_DEFAULT_ROUTE\n",
+      "episode_id": "83dd1940abe540129300b989f4c28b19",
+      "timestamp": 1786800134.8743558,
+      "metadata": {}
+    },
+    {
+      "scenario_name": "package_corruption",
+      "instance_id": "autofix-package-corruption-1cf9bd",
+      "steps": [
+        {
+          "step_index": 1,
+          "state_observation": "LLM Error: Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "thought": "",
+          "command": "",
+          "timeout_seconds": 0,
+          "stdout": "",
+          "stderr": "Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "exit_code": 1,
+          "reward": -0.1,
+          "done": true,
+          "raw_model_completion": "",
+          "metadata": {}
+        }
+      ],
+      "success": false,
+      "total_reward": -0.1,
+      "duration_seconds": 35.382324442995014,
+      "verification_message": "Package manager health check failed (code 2): APT_CHECK_FAILED\n",
+      "episode_id": "dd885d6c2c4a4f1eb334761a47e3fa9d",
+      "timestamp": 1786800134.9971895,
+      "metadata": {}
+    },
+    {
+      "scenario_name": "systemd_dns",
+      "instance_id": "autofix-systemd-dns-2be146",
+      "steps": [
+        {
+          "step_index": 1,
+          "state_observation": "LLM Error: Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "thought": "",
+          "command": "",
+          "timeout_seconds": 0,
+          "stdout": "",
+          "stderr": "Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "exit_code": 1,
+          "reward": -0.1,
+          "done": true,
+          "raw_model_completion": "",
+          "metadata": {}
+        }
+      ],
+      "success": false,
+      "total_reward": -0.1,
+      "duration_seconds": 35.677824469981715,
+      "verification_message": "DNS resolution failed. Stderr: \nStdout: DNS_ERROR: [Errno -3] Temporary failure in name resolution\n",
+      "episode_id": "39703144eb334c99a35a37317ae809d8",
+      "timestamp": 1786800135.2830455,
+      "metadata": {}
+    },
+    {
+      "scenario_name": "file_permissions",
+      "instance_id": "autofix-file-permissions-b05d3b",
+      "steps": [
+        {
+          "step_index": 1,
+          "state_observation": "LLM Error: Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "thought": "",
+          "command": "",
+          "timeout_seconds": 0,
+          "stdout": "",
+          "stderr": "Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "exit_code": 1,
+          "reward": -0.1,
+          "done": true,
+          "raw_model_completion": "",
+          "metadata": {}
+        }
+      ],
+      "success": false,
+      "total_reward": -0.1,
+      "duration_seconds": 36.00462392499321,
+      "verification_message": "Permission verification failed (code 1): SUDOERS_INSECURE_PERMS: 777\n",
+      "episode_id": "8f0f2651d0b44d328247e6b488e9484c",
+      "timestamp": 1786800135.622894,
+      "metadata": {}
+    },
+    {
+      "scenario_name": "zfs_mount",
+      "instance_id": "autofix-zfs-mount-26ec08",
+      "steps": [
+        {
+          "step_index": 1,
+          "state_observation": "LLM Error: Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "thought": "",
+          "command": "",
+          "timeout_seconds": 0,
+          "stdout": "",
+          "stderr": "Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "exit_code": 1,
+          "reward": -0.1,
+          "done": true,
+          "raw_model_completion": "",
+          "metadata": {}
+        }
+      ],
+      "success": true,
+      "total_reward": -0.1,
+      "duration_seconds": 14.54800275398884,
+      "verification_message": "Filesystem dataset /mnt/data mounted and verified intact.",
+      "episode_id": "827b6581634e4310924e35de9d7e1542",
+      "timestamp": 1786800149.4269195,
+      "metadata": {}
+    },
+    {
+      "scenario_name": "docker_socket",
+      "instance_id": "autofix-docker-socket-5002c1",
+      "steps": [
+        {
+          "step_index": 1,
+          "state_observation": "LLM Error: Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "thought": "",
+          "command": "",
+          "timeout_seconds": 0,
+          "stdout": "",
+          "stderr": "Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "exit_code": 1,
+          "reward": -0.1,
+          "done": true,
+          "raw_model_completion": "",
+          "metadata": {}
+        }
+      ],
+      "success": true,
+      "total_reward": -0.1,
+      "duration_seconds": 14.700759058003314,
+      "verification_message": "Docker daemon socket /var/run/docker.sock permissions verified accessible.",
+      "episode_id": "951ce5b75c494eb8a6128a158de0ab12",
+      "timestamp": 1786800149.6999223,
+      "metadata": {}
+    },
+    {
+      "scenario_name": "iptables_lockout",
+      "instance_id": "autofix-iptables-lockout-0e2068",
+      "steps": [
+        {
+          "step_index": 1,
+          "state_observation": "LLM Error: Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "thought": "",
+          "command": "",
+          "timeout_seconds": 0,
+          "stdout": "",
+          "stderr": "Model failed to produce valid AgentAction after 3 attempts: Malformed JSON response: Expecting value: line 1 column 1 (char 0)\nRaw output:\n\nLast raw output: ",
+          "exit_code": 1,
+          "reward": -0.1,
+          "done": true,
+          "raw_model_completion": "",
+          "metadata": {}
+        }
+      ],
+      "success": true,
+      "total_reward": -0.1,
+      "duration_seconds": 15.281579244008753,
+      "verification_message": "Firewall rules cleared. Outbound network traffic permitted.",
+      "episode_id": "641887ed2ade48499fccd5343c48afa2",
+      "timestamp": 1786800150.5667155,
+      "metadata": {}
+    }
+  ]
+}
