@@ -109,7 +109,9 @@ def bench(
     ] = "reports",
     metrics_port: Annotated[
         int,
-        typer.Option("--metrics-port", "-p", help="Prometheus metrics exporter port (0 to disable)"),
+        typer.Option(
+            "--metrics-port", "-p", help="Prometheus metrics exporter port (0 to disable)"
+        ),
     ] = 9100,
     mock_llm: Annotated[
         bool,
