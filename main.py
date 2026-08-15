@@ -2034,5 +2034,209 @@ def cmd_fleet_rollout(
         console.print(f"\n[bold green]Exported summary to:[/bold green] [cyan]{output}[/cyan]")
 
 
+@app.command("formal-verify")
+def cmd_formal_verify(
+    domain: Annotated[
+        str,
+        typer.Option(
+            "--domain", "-d", help="Domain to verify: network, firewall, permissions, combined"
+        ),
+    ] = "combined",
+    routes_json: Annotated[
+        str,
+        typer.Option("--routes-json", help="Path to JSON file containing routing table"),
+    ] = "",
+    rules_file: Annotated[
+        str,
+        typer.Option("--rules-file", help="Path to iptables rules text file"),
+    ] = "",
+    perms_json: Annotated[
+        str,
+        typer.Option("--perms-json", help="Path to JSON file containing file permission map"),
+    ] = "",
+    output: Annotated[
+        str,
+        typer.Option("--output", "-o", help="Target JSON proof output path"),
+    ] = "",
+) -> None:
+    """Run SMT formal verification proving absence of routing loops, shadow firewall rules, and ACL leaks."""
+    console.print(
+        Panel.fit(
+            f"[bold green]OS-AutoFix Engine: SMT Formal Theorem Prover ({domain})[/bold green]"
+        )
+    )
+
+    from security.formal_verifier import FormalStateVerifier
+
+    verifier = FormalStateVerifier(use_z3=True)
+
+    # Defaults for demonstration/testing
+    routes = [{"destination": "default", "gateway": "192.0.2.1", "interface": "eth0"}]
+    if routes_json and Path(routes_json).exists():
+        routes = json.loads(Path(routes_json).read_text(encoding="utf-8"))
+
+    rules = [
+        "-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT",
+        "-A INPUT -p tcp --dport 22 -j ACCEPT",
+        "-A INPUT -p udp --dport 53 -j ACCEPT",
+        "-A INPUT -p tcp --dport 9100 -j ACCEPT",
+        "-A INPUT -j DROP",
+    ]
+    if rules_file and Path(rules_file).exists():
+        rules = [
+            line.strip()
+            for line in Path(rules_file).read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+
+    perms = {
+        "/etc/sudoers": "0440",
+        "/etc/shadow": "0600",
+        "/etc/ssh/ssh_host_rsa_key": "0600",
+        "/usr/bin/os-autofix": "0755",
+    }
+    if perms_json and Path(perms_json).exists():
+        perms = json.loads(Path(perms_json).read_text(encoding="utf-8"))
+
+    if domain == "network":
+        res = verifier.verify_routing_table(routes)
+    elif domain == "firewall":
+        res = verifier.verify_firewall_rules(rules)
+    elif domain == "permissions":
+        res = verifier.verify_permission_boundaries(perms)
+    else:
+        res = verifier.verify_remediation_diff(
+            pre_state={},
+            post_state={"routes": routes, "firewall_rules": rules, "file_permissions": perms},
+        )
+
+    color = "green" if res.proved_safe else "red"
+    console.print(f"\nStatus:          [{color}]{res.status.value}[/{color}]")
+    console.print(f"Proved Safe:     [{color}]{res.proved_safe}[/{color}]")
+    console.print(f"SMT Solver Time: [cyan]{res.duration_ms:.2f}ms[/cyan]")
+    console.print(f"Proof Trace:     [white]{res.proof_trace}[/white]")
+
+    if res.counter_example:
+        console.print("\n[bold red]Counter-Example Discovered (Invariant Refutation):[/bold red]")
+        console.print(json.dumps(res.counter_example, indent=2))
+
+    if output:
+        Path(output).write_text(json.dumps(res.to_dict(), indent=2), encoding="utf-8")
+        console.print(f"\n[bold green]Saved formal proof to:[/bold green] [cyan]{output}[/cyan]")
+
+
+@app.command("distill")
+def cmd_distill(
+    teacher: Annotated[
+        str,
+        typer.Option("--teacher", "-t", help="Teacher policy model identifier"),
+    ] = "qwen2.5-coder:7b",
+    student: Annotated[
+        str,
+        typer.Option("--student", "-s", help="Student edge policy model identifier"),
+    ] = "qwen2.5-coder:0.5b",
+    dataset: Annotated[
+        str,
+        typer.Option("--dataset", help="Path to training dataset JSONL"),
+    ] = "data/dataset_unsloth_sharegpt.jsonl",
+    temperature: Annotated[
+        float,
+        typer.Option("--temperature", help="Distillation temperature scaling"),
+    ] = 2.0,
+    output_dir: Annotated[
+        str,
+        typer.Option("--output-dir", "-o", help="Destination artifact directory"),
+    ] = "outputs/distilled",
+    quant: Annotated[
+        str,
+        typer.Option("--quant", "-q", help="GGUF quantization scheme (q4_k_m, q3_k_s, q8_0)"),
+    ] = "q4_k_m",
+) -> None:
+    """Distill 7B/14B teacher policies into lightweight sub-1B models and export ONNX / GGUF edge binaries."""
+    console.print(
+        Panel.fit(
+            f"[bold magenta]OS-AutoFix Engine: Edge Policy Distillation Pipeline[/bold magenta]\n"
+            f"Teacher: [cyan]{teacher}[/cyan] -> Student: [yellow]{student}[/yellow]"
+        )
+    )
+
+    from trainer.distillation_pipeline import DistillationConfig, DistillationPipeline
+
+    cfg = DistillationConfig(
+        teacher_model=teacher,
+        student_model=student,
+        temperature=temperature,
+        quantization=quant,
+    )
+    pipeline = DistillationPipeline(cfg)
+
+    res = asyncio.run(
+        pipeline.run_distillation(
+            dataset_path=dataset,
+            output_dir=output_dir,
+        )
+    )
+
+    console.print(f"\nDistillation ID: [bold]{res.distillation_id}[/bold]")
+    console.print(
+        f"Total Loss:      [green]{res.final_loss:.4f}[/green] (CE: {res.ce_loss:.4f}, KL: {res.kl_loss:.4f})"
+    )
+    console.print(f"Model Size:      [cyan]{res.model_size_mb:.1f} MB[/cyan]")
+    console.print(f"Duration:        [white]{res.duration_seconds:.2f}s[/white]")
+
+    if res.onnx_path:
+        console.print(f"ONNX Model:      [cyan]{res.onnx_path}[/cyan]")
+    if res.gguf_path:
+        console.print(f"GGUF Artifact:   [green]{res.gguf_path}[/green]")
+
+
+@app.command("build-dist")
+def cmd_build_dist(
+    output_dir: Annotated[
+        str,
+        typer.Option("--output-dir", "-o", help="Target distribution artifacts directory"),
+    ] = "dist",
+    deb: Annotated[
+        bool,
+        typer.Option("--deb", help="Build Debian (.deb) package"),
+    ] = True,
+    rpm: Annotated[
+        bool,
+        typer.Option("--rpm", help="Build RPM (.rpm) package spec"),
+    ] = True,
+    binary: Annotated[
+        bool,
+        typer.Option("--binary", help="Compile standalone executable script"),
+    ] = True,
+) -> None:
+    """Build standalone enterprise binaries, Debian packages, RPM specs, and systemd units."""
+    console.print(
+        Panel.fit(
+            "[bold cyan]OS-AutoFix Engine: Production System Packager & Artifact Builder[/bold cyan]"
+        )
+    )
+
+    from deploy.packager import PackageSpec, ProductionPackager
+
+    out_p = Path(output_dir)
+    out_p.mkdir(parents=True, exist_ok=True)
+    packager = ProductionPackager(PackageSpec(version="1.0.0"))
+
+    if binary:
+        bin_path = packager.build_standalone_binary(out_p)
+        console.print(f"  • [bold green]Standalone Binary:[/bold green] [cyan]{bin_path}[/cyan]")
+
+    if deb:
+        deb_path = packager.build_deb_package(out_p)
+        console.print(f"  • [bold green]Debian Package:[/bold green]    [cyan]{deb_path}[/cyan]")
+
+    if rpm:
+        rpm_path = packager.build_rpm_package(out_p)
+        console.print(f"  • [bold green]RPM Spec Package:[/bold green]  [cyan]{rpm_path}[/cyan]")
+
+    man_path = packager.generate_manpage(out_p)
+    console.print(f"  • [bold green]Unix Manpage:[/bold green]      [cyan]{man_path}[/cyan]")
+
+
 if __name__ == "__main__":
     app()

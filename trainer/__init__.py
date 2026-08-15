@@ -1,5 +1,8 @@
-"""Trainer package for recording, formatting, MCTS search, and executing SFT and GRPO policy training."""
-
+from trainer.distillation_pipeline import (
+    DistillationConfig,
+    DistillationPipeline,
+    DistillationResult,
+)
 from trainer.mcts_search import MCTSNode, MCTSSearchEngine
 from trainer.train_grpo import compute_trajectory_reward, load_grpo_dataset, train_grpo
 from trainer.train_sft import load_sharegpt_dataset, train_sft
@@ -20,4 +23,7 @@ __all__ = [
     "compute_trajectory_reward",
     "load_sharegpt_dataset",
     "load_grpo_dataset",
+    "DistillationPipeline",
+    "DistillationConfig",
+    "DistillationResult",
 ]

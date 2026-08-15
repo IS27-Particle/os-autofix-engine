@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "os-autofix-engine"
-version = "0.9.0"
-description = "Autonomous OS-level policy training, differential state shadow execution, CRIU live hotpatching, progressive canary fleet rollouts, and Incus VM evaluation harness"
+version = "1.0.0"
+description = "Enterprise Autonomous OS-Level Policy Engine: SMT Formal Verification, Edge Distillation, Distributed OTel Tracing, and Incus Evaluation Harness"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -13,7 +13,7 @@ authors = [
     { name = "Antigravity Autonomous Engineering", email = "engineers@antigravity.ai" }
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
@@ -37,6 +37,7 @@ dependencies = [
     "mcp>=1.0.0",
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
+    "z3-solver>=4.12.0",
 ]
 
 [project.optional-dependencies]

@@ -1,5 +1,4 @@
-"""Deployment automation, systemd unit generation, and host pre-flight verification."""
-
+from deploy.packager import PackageSpec, ProductionPackager
 from deploy.provisioner import HostProvisioner
 
-__all__ = ["HostProvisioner"]
+__all__ = ["HostProvisioner", "ProductionPackager", "PackageSpec"]

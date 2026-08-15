@@ -1,4 +1,4 @@
-"""Monitoring package providing real-time Prometheus telemetry, metrics exporter, live TUI dashboard, structured JSON logging, and webhook alerts."""
+"""Monitoring package providing real-time Prometheus telemetry, metrics exporter, live TUI dashboard, structured JSON logging, webhook alerts, and OpenTelemetry tracing."""
 
 from monitoring.alerts import (
     AlertPayload,
@@ -22,6 +22,13 @@ from monitoring.metrics import (
     Histogram,
     MetricsRegistry,
     start_metrics_server,
+)
+from monitoring.otel_tracer import (
+    GLOBAL_TRACER,
+    EngineTracer,
+    SpanRecord,
+    get_tracer,
+    traced_span,
 )
 
 __all__ = [
@@ -47,4 +54,9 @@ __all__ = [
     "format_discord_payload",
     "format_slack_payload",
     "format_generic_payload",
+    "EngineTracer",
+    "GLOBAL_TRACER",
+    "SpanRecord",
+    "get_tracer",
+    "traced_span",
 ]

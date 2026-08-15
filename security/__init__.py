@@ -16,6 +16,11 @@ from security.ebpf_network_chaos import (
     EbpfNetworkChaos,
     NetworkChaosSpec,
 )
+from security.formal_verifier import (
+    FormalStateVerifier,
+    SMTProofResult,
+    VerificationStatus,
+)
 from security.mandatory_access_control import (
     AppArmorProfile,
     AppArmorRule,
@@ -38,4 +43,7 @@ __all__ = [
     "AppArmorProfile",
     "AppArmorRule",
     "MacType",
+    "FormalStateVerifier",
+    "SMTProofResult",
+    "VerificationStatus",
 ]
