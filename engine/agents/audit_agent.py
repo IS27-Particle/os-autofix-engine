@@ -63,7 +63,20 @@ class AuditAgent:
         if is_insecure_sudoers:
             audit_checks.append("Security Alert: /etc/sudoers has unsafe 777 permissions")
 
-        collateral_damage = is_insecure_sudoers
+        # 4. Kernel & Syscall security audit on remediation actions
+        from security.ebpf_auditor import SyscallSecurityAuditor
+
+        auditor = SyscallSecurityAuditor(safety_threshold=0.7)
+        safety_violation = False
+        for cmd in remediation_result.executed_commands:
+            sec_report = auditor.inspect_command(cmd)
+            if not sec_report.is_safe:
+                safety_violation = True
+                audit_checks.append(
+                    f"Security Alert: Unsafe command `{cmd}` ({sec_report.rejection_reason})"
+                )
+
+        collateral_damage = is_insecure_sudoers or safety_violation
         approved = is_verified and not collateral_damage
         revert_recommended = not approved
 

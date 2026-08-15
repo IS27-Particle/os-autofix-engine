@@ -1216,5 +1216,182 @@ def cmd_mcp(
     run_mcp_server(transport=transport, port=port, host=host)
 
 
+@app.command("chaos")
+def cmd_chaos(
+    rate_minutes: Annotated[
+        float,
+        typer.Option("--rate-minutes", "-r", help="Mean interval between chaos fault injections"),
+    ] = 1.0,
+    fleet_size: Annotated[
+        int,
+        typer.Option("--fleet-size", "-f", help="Concurrent canary sandbox fleet size"),
+    ] = 3,
+    duration_hours: Annotated[
+        float,
+        typer.Option("--duration-hours", "-d", help="Total runtime for chaos daemon in hours"),
+    ] = 1.0,
+    instance_type: Annotated[
+        str,
+        typer.Option("--type", "-t", help="'container' or 'vm'"),
+    ] = "container",
+    mock_llm: Annotated[
+        bool,
+        typer.Option("--mock-llm", help="Use deterministic mock agents"),
+    ] = False,
+    log_level: Annotated[
+        str,
+        typer.Option("--log-level", help="Log level"),
+    ] = "INFO",
+) -> None:
+    """Run autonomous Chaos Engineering daemon injecting faults into canary sandboxes and measuring MTTR."""
+    setup_logging(log_level)
+    console.print(
+        Panel.fit("[bold red]OS-AutoFix Engine: Autonomous Chaos Engineering Daemon[/bold red]")
+    )
+
+    from engine.chaos_daemon import ChaosDaemon
+
+    cfg = get_default_config()
+    cfg.incus.instance_type = "container" if instance_type.lower() == "container" else "vm"
+    if mock_llm:
+        cfg.llm.mock_mode = True
+
+    daemon = ChaosDaemon(
+        config=cfg,
+        fleet_size=fleet_size,
+        rate_minutes=rate_minutes,
+        duration_hours=duration_hours,
+        instance_type=instance_type,
+    )
+
+    asyncio.run(daemon.run())
+    summary = daemon.get_summary_metrics()
+
+    console.print(
+        f"\n[bold green]Chaos Engineering Summary:[/bold green]\n"
+        f"  • Total Experiments: [cyan]{summary['total_experiments']}[/cyan]\n"
+        f"  • Autonomous Recoveries: [green]{summary['recoveries']}[/green] ({summary['recovery_rate'] * 100:.1f}%)\n"
+        f"  • Mean Time to Resolution (MTTR): [yellow]{summary['mean_mttr_seconds']:.2f}s[/yellow]\n"
+        f"  • Average Safety Score: [magenta]{summary['avg_safety_score']:.2f}[/magenta]\n"
+    )
+
+
+@app.command("bench-distributed")
+def cmd_bench_distributed(
+    scenario: Annotated[
+        str,
+        typer.Option("--scenario", "-s", help="Distributed scenario name or 'all'"),
+    ] = "all",
+    instance_type: Annotated[
+        str,
+        typer.Option("--type", "-t", help="'container' or 'vm'"),
+    ] = "container",
+    log_level: Annotated[
+        str,
+        typer.Option("--log-level", help="Log level"),
+    ] = "INFO",
+) -> None:
+    """Evaluate multi-node distributed topology scenarios (WireGuard, etcd Raft, Keepalived HA)."""
+    setup_logging(log_level)
+    console.print(
+        Panel.fit("[bold blue]OS-AutoFix Engine: Distributed Cluster Benchmark[/bold blue]")
+    )
+
+    from scenarios.distributed import get_all_distributed_scenarios, get_distributed_scenario
+
+    if scenario.lower() == "all":
+        targets = get_all_distributed_scenarios()
+    else:
+        targets = [get_distributed_scenario(n.strip()) for n in scenario.split(",") if n.strip()]
+
+    async def _run() -> None:
+        table = Table(
+            title="Distributed Scenario Verification", show_header=True, header_style="bold cyan"
+        )
+        table.add_column("Scenario", style="bold")
+        table.add_column("Nodes", justify="center")
+        table.add_column("Category", style="yellow")
+        table.add_column("Initial Breakage", justify="center")
+        table.add_column("Status", style="green")
+
+        for sc in targets:
+            nodes: dict[str, IncusSandbox] = {
+                node_name: IncusSandbox(
+                    instance_name=f"dist-{node_name}-{uuid.uuid4().hex[:4]}",
+                    is_vm=(instance_type.lower() == "vm"),
+                )
+                for node_name in sc.required_nodes
+            }
+
+            try:
+                for sb in nodes.values():
+                    await sb.setup()
+
+                await sc.setup_topology(nodes)
+                baseline_ok, _ = await sc.verify(nodes)
+
+                await sc.inject_fault(nodes)
+                fault_active, fault_msg = await sc.verify(nodes)
+
+                status = (
+                    "[green]VERIFIED BROKEN[/green]"
+                    if not fault_active
+                    else "[red]FAULT MISSED[/red]"
+                )
+                table.add_row(
+                    sc.name,
+                    str(len(nodes)),
+                    sc.category,
+                    "[green]YES[/green]" if not fault_active else "[red]NO[/red]",
+                    status,
+                )
+            finally:
+                for sb in nodes.values():
+                    await sb.cleanup()
+
+        console.print(table)
+
+    asyncio.run(_run())
+
+
+@app.command("audit-security")
+def cmd_audit_security(
+    command: Annotated[
+        str,
+        typer.Option("--command", "-c", help="Shell command to analyze for security anti-patterns"),
+    ] = "rm -rf /etc/hosts",
+    threshold: Annotated[
+        float,
+        typer.Option("--threshold", help="Minimum required safety score"),
+    ] = 0.7,
+) -> None:
+    """Run an interactive kernel-level eBPF syscall security audit on a command or remediation script."""
+    console.print(
+        Panel.fit("[bold magenta]OS-AutoFix Engine: Kernel Syscall Security Auditor[/bold magenta]")
+    )
+
+    from security.ebpf_auditor import SyscallSecurityAuditor
+
+    auditor = SyscallSecurityAuditor(safety_threshold=threshold)
+    report = auditor.inspect_command(command)
+
+    color = "green" if report.is_safe else "red"
+    console.print(f"Target Command: [bold]{report.command}[/bold]")
+    console.print(
+        f"Safety Score:   [{color}]{report.safety_score:.2f}[/{color}] (Threshold: {threshold})"
+    )
+    console.print(
+        f"Decision:       [{color}]{'SAFE TO EXECUTE' if report.is_safe else 'BLOCKED / ABORT'}[/{color}]"
+    )
+    console.print(f"Blast Radius:   [yellow]{report.blast_radius.upper()}[/yellow]")
+
+    if report.events:
+        console.print("\n[bold]Detected Security Events:[/bold]")
+        for e in report.events:
+            console.print(
+                f"  • [{e.risk_level.upper()}] Syscall: `{e.syscall_type}` | {e.description} (Penalty: -{e.penalty})"
+            )
+
+
 if __name__ == "__main__":
     app()

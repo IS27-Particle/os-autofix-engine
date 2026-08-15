@@ -244,6 +244,29 @@ MODEL_PASS_RATE = Gauge(
 )
 REGISTRY.register(MODEL_PASS_RATE)
 
+# 7. Chaos engineering metrics
+CHAOS_INJECTIONS_TOTAL = Counter(
+    "os_autofix_chaos_injections_total",
+    "Total autonomous chaos engineering fault injections",
+    label_names=["scenario"],
+)
+REGISTRY.register(CHAOS_INJECTIONS_TOTAL)
+
+CHAOS_MTTR_SECONDS = Histogram(
+    "os_autofix_mttr_seconds",
+    "Mean time to resolution (MTTR) latency in seconds",
+    label_names=["scenario"],
+    buckets=[1.0, 5.0, 10.0, 30.0, 60.0, 120.0, 300.0],
+)
+REGISTRY.register(CHAOS_MTTR_SECONDS)
+
+CHAOS_SAFETY_VIOLATIONS = Counter(
+    "os_autofix_safety_violations_total",
+    "Total security and safety violations detected during remediation",
+    label_names=["violation_type"],
+)
+REGISTRY.register(CHAOS_SAFETY_VIOLATIONS)
+
 
 class MetricsHTTPHandler(http.server.BaseHTTPRequestHandler):
     """HTTP Request Handler exposing /metrics endpoint for Prometheus scrapers."""
