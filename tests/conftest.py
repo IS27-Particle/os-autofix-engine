@@ -215,7 +215,22 @@ class MockSandbox(BaseSandbox):
                 command=command, exit_code=0, stdout="-P OUTPUT ACCEPT\n", stderr=""
             )
 
-        # 9. File reading
+        # 9. Generic echo redirection and file removal
+        if "echo " in cmd_clean and " > " in cmd_clean:
+            parts = cmd_clean.split(" > ", 1)
+            content = (
+                parts[0].replace("echo ", "").strip().strip("'").strip('"').replace('\\"', '"')
+            )
+            filepath = parts[1].split(" 2>")[0].strip().strip("'").strip('"')
+            self.files[filepath] = content + "\n"
+            return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
+
+        if cmd_clean.startswith("rm -f "):
+            filepath = cmd_clean.replace("rm -f ", "").split()[0].strip().strip("'").strip('"')
+            self.files.pop(filepath, None)
+            return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
+
+        # 10. File reading
         if cmd_clean.startswith("cat "):
             path = cmd_clean.split("cat ", 1)[1].strip().strip("'").strip('"')
             path = path.split(" 2>")[0].strip()
@@ -230,7 +245,7 @@ class MockSandbox(BaseSandbox):
                 stderr=f"cat: {path}: No such file or directory",
             )
 
-        # 10. Fallback success
+        # 11. Fallback success
         return ExecutionResult(command=command, exit_code=0, stdout="OK", stderr="")
 
     async def get_state(self) -> dict[str, Any]:

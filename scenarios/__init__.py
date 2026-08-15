@@ -1,4 +1,4 @@
-"""Scenarios package for OS diagnostic fault injection and resolution verification."""
+"""Scenarios package for OS diagnostic fault injection, resolution verification, and synthetic generation."""
 
 from scenarios.base_scenario import BaseScenario
 from scenarios.docker_socket import DockerSocketScenario
@@ -12,6 +12,7 @@ from scenarios.registry import (
     list_scenarios,
     register_scenario,
 )
+from scenarios.synthesizer import ScenarioSynthesizer
 from scenarios.systemd_dns import SystemdDNSScenario
 from scenarios.zfs_mount import ZFSMountScenario
 
@@ -24,6 +25,7 @@ __all__ = [
     "ZFSMountScenario",
     "DockerSocketScenario",
     "IPTablesLockoutScenario",
+    "ScenarioSynthesizer",
     "get_scenario",
     "list_scenarios",
     "get_all_scenarios",

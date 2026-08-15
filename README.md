@@ -64,17 +64,19 @@ flowchart TD
 4. [Installation](#-installation)
 5. [CLI Usage](#-cli-usage)
    - [Model Context Protocol (MCP) Server (`mcp`)](#1-model-context-protocol-mcp-server-mcp)
-   - [Host Pre-Flight Doctor (`doctor`)](#2-host-pre-flight-doctor-doctor)
-   - [Real-Time Monitoring & Telemetry (`monitor`)](#3-real-time-monitoring--telemetry-monitor)
-   - [Environment Health Check (`test-env`)](#4-environment-health-check-test-env)
-   - [Scenario Benchmarking (`bench`)](#5-scenario-benchmarking-bench)
-   - [Dataset Collection (`collect`)](#6-dataset-collection-collect)
-   - [SFT 4-bit LoRA Training (`train-sft`)](#7-sft-4-bit-lora-training-train-sft)
-   - [GRPO Policy Optimization (`train-grpo`)](#8-grpo-policy-optimization-train-grpo)
-   - [Model Packaging & Ollama Deployment (`deploy`)](#9-model-packaging--ollama-deployment-deploy)
-   - [Continuous Self-Improvement Loop (`loop`)](#10-continuous-self-improvement-loop-loop)
-   - [Production Systemd Daemon Deployment (`deploy-daemon`)](#11-production-systemd-daemon-deployment-deploy-daemon)
-   - [Automated GitHub Repo Setup (`git-init`)](#12-automated-github-repo-setup-git-init)
+   - [Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)](#2-monte-carlo-tree-search-trajectory-collection-mcts-collect)
+   - [Synthetic Scenario Synthesizer (`synthesize-scenario`)](#3-synthetic-scenario-synthesizer-synthesize-scenario)
+   - [Host Pre-Flight Doctor (`doctor`)](#4-host-pre-flight-doctor-doctor)
+   - [Real-Time Monitoring & Telemetry (`monitor`)](#5-real-time-monitoring--telemetry-monitor)
+   - [Environment Health Check (`test-env`)](#6-environment-health-check-test-env)
+   - [Scenario Benchmarking (`bench`)](#7-scenario-benchmarking-bench)
+   - [Dataset Collection (`collect`)](#8-dataset-collection-collect)
+   - [SFT 4-bit LoRA Training (`train-sft`)](#9-sft-4-bit-lora-training-train-sft)
+   - [GRPO Policy Optimization (`train-grpo`)](#10-grpo-policy-optimization-train-grpo)
+   - [Model Packaging & Ollama Deployment (`deploy`)](#11-model-packaging--ollama-deployment-deploy)
+   - [Continuous Self-Improvement Loop (`loop`)](#12-continuous-self-improvement-loop-loop)
+   - [Production Systemd Daemon Deployment (`deploy-daemon`)](#13-production-systemd-daemon-deployment-deploy-daemon)
+   - [Automated GitHub Repo Setup (`git-init`)](#14-automated-github-repo-setup-git-init)
 6. [Model Context Protocol (MCP) Integration](#-model-context-protocol-mcp-integration)
 7. [Supported Diagnostic Scenarios](#-supported-diagnostic-scenarios)
 8. [Prometheus Metrics & Grafana](#-prometheus-metrics--grafana)
@@ -85,6 +87,8 @@ flowchart TD
 
 ## ✨ Key Features
 
+- **Monte Carlo Tree Search (MCTS) Trajectory Collector**: Explores OS action spaces with snapshot branching, UCT selection, loop pruning heuristics, and shortest-path extraction into `data/dataset_mcts_optimal.jsonl`.
+- **LLM-Driven Synthetic Scenario Synthesizer**: Prompts teacher models to generate novel Linux failure scenarios, dynamically compiles Python code, validates in 3-phase sandbox pre-flight checks, and registers them automatically.
 - **Model Context Protocol (MCP) Server**: Exposes sandbox creation, fault injection, command execution, and benchmark metrics over stdio / SSE to Claude Desktop, Open-WebUI, and AI agent frameworks.
 - **Native Incus Hypervisor Virtualization**: Ephemeral VM (`--vm`) or container isolation.
 - **Zero-Copy Sub-Second Rollbacks**: Instant ZFS/Btrfs snapshotting before and after fault injection.
@@ -179,14 +183,42 @@ python3 main.py mcp
 python3 main.py mcp --transport sse --port 8080
 ```
 
-### 2. Host Pre-Flight Doctor (`doctor`)
+### 2. Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)
+Explores the OS action space using snapshot-branching Monte Carlo Tree Search and extracts the optimal shortest-path resolution trajectory:
+
+```bash
+python3 main.py mcts-collect \
+  --scenario systemd_dns \
+  --simulations 15 \
+  --exploration-constant 1.414 \
+  --max-depth 6 \
+  --branch-factor 3 \
+  --output-file data/dataset_mcts_optimal.jsonl \
+  --backend ollama \
+  --model qwen2.5-coder:7b
+```
+
+### 3. Synthetic Scenario Synthesizer (`synthesize-scenario`)
+Uses teacher LLMs to synthesize novel Linux diagnostic scenarios, validates them inside Incus sandboxes across 3 verification phases, and automatically registers them:
+
+```bash
+python3 main.py synthesize-scenario \
+  --count 3 \
+  --topic "PAM security lockout and file descriptor limits" \
+  --output-dir scenarios/synthetic \
+  --validate \
+  --backend ollama \
+  --model qwen2.5-coder:7b
+```
+
+### 4. Host Pre-Flight Doctor (`doctor`)
 Runs pre-flight diagnostics for KVM virtualization, Incus CLI/storage/bridges, and remote LLM endpoints:
 
 ```bash
 python3 main.py doctor
 ```
 
-### 3. Real-Time Monitoring & Telemetry (`monitor`)
+### 5. Real-Time Monitoring & Telemetry (`monitor`)
 Launch the live Rich terminal dashboard or start the standalone Prometheus metrics exporter:
 
 ```bash
@@ -197,14 +229,14 @@ python3 main.py monitor
 python3 main.py monitor --port 9100 --server-only
 ```
 
-### 3. Environment Health Check (`test-env`)
+### 6. Environment Health Check (`test-env`)
 Validates Incus hypervisor, KVM acceleration, Ollama / Open-WebUI connectivity, and executes a live ephemeral sandbox snapshot rollback test:
 
 ```bash
 python3 main.py test-env --type container
 ```
 
-### 4. Scenario Benchmarking (`bench`)
+### 7. Scenario Benchmarking (`bench`)
 Evaluates model performance across diagnostic fault scenarios in parallel:
 
 ```bash
@@ -216,7 +248,7 @@ python3 main.py bench \
   --type vm
 ```
 
-### 5. Dataset Collection (`collect`)
+### 8. Dataset Collection (`collect`)
 Generates exploration rollouts and exports positive trajectories for training:
 
 ```bash
@@ -229,7 +261,7 @@ python3 main.py collect \
   --output-dir data
 ```
 
-### 6. SFT 4-bit LoRA Training (`train-sft`)
+### 9. SFT 4-bit LoRA Training (`train-sft`)
 Fine-tunes base models on ShareGPT-formatted trajectory datasets with automatic GGUF quantization:
 
 ```bash
@@ -243,7 +275,7 @@ python3 main.py train-sft \
   --export-gguf
 ```
 
-### 7. GRPO Policy Optimization (`train-grpo`)
+### 10. GRPO Policy Optimization (`train-grpo`)
 Runs Group Relative Policy Optimization using multi-component reward functions:
 
 ```bash
@@ -255,7 +287,7 @@ python3 main.py train-grpo \
   --generations 4
 ```
 
-### 8. Model Packaging & Ollama Deployment (`deploy`)
+### 11. Model Packaging & Ollama Deployment (`deploy`)
 Generates Modelfiles with structured system prompts and registers new model tags with Ollama:
 
 ```bash
@@ -265,7 +297,7 @@ python3 main.py deploy \
   --ollama-url http://10.0.0.25:11434
 ```
 
-### 9. Continuous Self-Improvement Loop (`loop`)
+### 12. Continuous Self-Improvement Loop (`loop`)
 Executes an autonomous closed-loop cycle (Benchmark $\to$ Collect $\to$ Filter $\to$ Train $\to$ Deploy $\to$ Verify) with automatic rollback protection:
 
 ```bash
@@ -280,14 +312,14 @@ python3 main.py loop \
   --ollama-url http://10.0.0.25:11434
 ```
 
-### 10. Production Systemd Daemon Deployment (`deploy-daemon`)
+### 13. Production Systemd Daemon Deployment (`deploy-daemon`)
 Installs and enables the `os-autofix.service` and `os-autofix-metrics.service` unit files:
 
 ```bash
 python3 main.py deploy-daemon --systemd-dir /etc/systemd/system --enable
 ```
 
-### 12. Automated GitHub Repo Setup (`git-init`)
+### 14. Automated GitHub Repo Setup (`git-init`)
 Initializes the git repository, stages all code, creates the remote repo, and pushes initial commits:
 
 ```bash

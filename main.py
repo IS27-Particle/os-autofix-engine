@@ -7,6 +7,7 @@ import logging
 import subprocess
 import sys
 import time
+import uuid
 from pathlib import Path
 from typing import Annotated, Literal
 
@@ -764,6 +765,216 @@ def cmd_list_scenarios() -> None:
         table.add_row(s.name, s.category, s.difficulty, str(s.max_steps), s.description)
 
     console.print(table)
+
+
+@app.command("mcts-collect")
+def cmd_mcts_collect(
+    scenario: Annotated[
+        str,
+        typer.Option("--scenario", "-s", help="Scenario name to search"),
+    ] = "systemd_dns",
+    simulations: Annotated[
+        int,
+        typer.Option(
+            "--simulations",
+            "-n",
+            help="Total MCTS simulations to perform",
+        ),
+    ] = 12,
+    exploration_constant: Annotated[
+        float,
+        typer.Option("--exploration-constant", "-c", help="UCT exploration parameter"),
+    ] = 1.414,
+    max_depth: Annotated[
+        int,
+        typer.Option("--max-depth", "-d", help="Maximum search tree depth"),
+    ] = 6,
+    branch_factor: Annotated[
+        int,
+        typer.Option("--branch-factor", "-k", help="Candidate action branches per expansion"),
+    ] = 3,
+    output_file: Annotated[
+        str,
+        typer.Option("--output-file", "-o", help="Output path for optimal JSONL trajectory"),
+    ] = "data/dataset_mcts_optimal.jsonl",
+    backend: Annotated[
+        str,
+        typer.Option("--backend", "-b", help="'ollama', 'open-webui', 'openai', or 'mock'"),
+    ] = "ollama",
+    model: Annotated[
+        str,
+        typer.Option("--model", "-m", help="Inference model name tag"),
+    ] = "qwen2.5-coder:7b",
+    endpoint: Annotated[
+        str,
+        typer.Option("--endpoint", "-e", help="Endpoint URL"),
+    ] = "",
+    instance_type: Annotated[
+        str,
+        typer.Option("--type", "-t", help="'container' or 'vm'"),
+    ] = "container",
+    image: Annotated[
+        str,
+        typer.Option("--image", "-i", help="Incus image alias"),
+    ] = "images:ubuntu/24.04",
+    mock_llm: Annotated[
+        bool,
+        typer.Option("--mock-llm", help="Use heuristic offline mock LLM"),
+    ] = False,
+    log_level: Annotated[
+        str,
+        typer.Option("--log-level", help="Log level"),
+    ] = "INFO",
+) -> None:
+    """Run Monte Carlo Tree Search (MCTS) trajectory collection over Incus snapshot branches."""
+    setup_logging(log_level)
+    console.print(Panel.fit("[bold blue]OS-AutoFix Engine: MCTS Trajectory Search[/bold blue]"))
+
+    from trainer.mcts_search import MCTSSearchEngine
+
+    cfg = get_default_config()
+    cfg.incus.instance_type = "container" if instance_type.lower() == "container" else "vm"
+    cfg.incus.default_image = image
+
+    if backend:
+        cfg.llm.backend = backend  # type: ignore[assignment]
+    if model:
+        cfg.llm.model_name = model
+    if endpoint:
+        if cfg.llm.backend == "open-webui":
+            cfg.llm.open_webui_base_url = endpoint
+        else:
+            cfg.llm.ollama_base_url = endpoint
+    if mock_llm:
+        cfg.llm.mock_mode = True
+
+    target_scenario = get_scenario(scenario)
+    instance_id = f"autofix-mcts-{uuid.uuid4().hex[:6]}"
+    sandbox = IncusSandbox(
+        instance_name=instance_id,
+        image=image,
+        is_vm=(instance_type.lower() == "vm"),
+    )
+
+    search_engine = MCTSSearchEngine(
+        config=cfg,
+        exploration_constant=exploration_constant,
+        max_depth=max_depth,
+        branch_factor=branch_factor,
+    )
+
+    async def _run() -> None:
+        try:
+            traj = await search_engine.run_search(
+                scenario=target_scenario,
+                sandbox=sandbox,
+                max_simulations=simulations,
+            )
+            if traj:
+                out = search_engine.save_optimal_trajectory(traj, output_file=output_file)
+                status_color = "green" if traj.success else "red"
+                console.print(
+                    f"\n[{status_color}]MCTS Search Complete:[/{status_color}] "
+                    f"Success: {traj.success} | Steps: {len(traj.steps)} | Reward: {traj.total_reward:.2f}"
+                )
+                console.print(f"Optimal trajectory saved to: [cyan]{out}[/cyan]")
+        finally:
+            await sandbox.cleanup()
+
+    asyncio.run(_run())
+
+
+@app.command("synthesize-scenario")
+def cmd_synthesize_scenario(
+    count: Annotated[
+        int,
+        typer.Option("--count", "-n", help="Number of scenarios to synthesize"),
+    ] = 1,
+    topic: Annotated[
+        str,
+        typer.Option("--topic", "-t", help="Scenario domain topic or failure description"),
+    ] = "",
+    output_dir: Annotated[
+        str,
+        typer.Option("--output-dir", "-o", help="Output directory for generated scenarios"),
+    ] = "scenarios/synthetic",
+    backend: Annotated[
+        str,
+        typer.Option("--backend", "-b", help="'ollama', 'open-webui', or 'mock'"),
+    ] = "ollama",
+    model: Annotated[
+        str,
+        typer.Option("--model", "-m", help="Teacher model name tag"),
+    ] = "qwen2.5-coder:7b",
+    endpoint: Annotated[
+        str,
+        typer.Option("--endpoint", "-e", help="Endpoint URL"),
+    ] = "",
+    validate: Annotated[
+        bool,
+        typer.Option(
+            "--validate/--no-validate", help="Run live Incus sandbox pre-flight validation"
+        ),
+    ] = True,
+    instance_type: Annotated[
+        str,
+        typer.Option("--type", help="'container' or 'vm'"),
+    ] = "container",
+    mock_llm: Annotated[
+        bool,
+        typer.Option("--mock-llm", help="Use deterministic offline synthetic generator"),
+    ] = False,
+    log_level: Annotated[
+        str,
+        typer.Option("--log-level", help="Log level"),
+    ] = "INFO",
+) -> None:
+    """Synthesize novel OS diagnostic scenarios using teacher LLMs with sandbox pre-flight checks."""
+    setup_logging(log_level)
+    console.print(Panel.fit("[bold magenta]OS-AutoFix Engine: Scenario Synthesizer[/bold magenta]"))
+
+    from scenarios.synthesizer import ScenarioSynthesizer
+
+    cfg = get_default_config()
+    cfg.incus.instance_type = "container" if instance_type.lower() == "container" else "vm"
+
+    if backend:
+        cfg.llm.backend = backend  # type: ignore[assignment]
+    if model:
+        cfg.llm.model_name = model
+    if endpoint:
+        if cfg.llm.backend == "open-webui":
+            cfg.llm.open_webui_base_url = endpoint
+        else:
+            cfg.llm.ollama_base_url = endpoint
+    if mock_llm:
+        cfg.llm.mock_mode = True
+
+    synthesizer = ScenarioSynthesizer(config=cfg, output_dir=output_dir)
+
+    def sandbox_factory(name: str) -> IncusSandbox:
+        return IncusSandbox(
+            instance_name=name,
+            is_vm=(instance_type.lower() == "vm"),
+        )
+
+    sb_factory = sandbox_factory if validate else None
+    results = asyncio.run(
+        synthesizer.synthesize(
+            count=count,
+            topic=topic or None,
+            sandbox_factory=sb_factory,
+        )
+    )
+
+    console.print(f"\n[bold green]Synthesized {len(results)} scenario(s):[/bold green]")
+    for r in results:
+        if r.get("valid"):
+            console.print(
+                f"  • [green]VALID[/green]   `{r['name']}` ({r.get('category')}) -> {r.get('file_path')}"
+            )
+        else:
+            console.print(f"  • [red]FAILED[/red]  `{r.get('name', 'unknown')}`: {r.get('error')}")
 
 
 @app.command("mcp")
