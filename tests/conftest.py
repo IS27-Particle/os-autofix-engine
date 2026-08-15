@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import shutil
 from pathlib import Path
 from typing import Any
@@ -279,7 +280,58 @@ class MockSandbox(BaseSandbox):
                 return ExecutionResult(command=command, exit_code=1, stdout="", stderr="")
             return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
 
-        # 11. File reading
+        if "ls /mnt/data_pool" in cmd_clean:
+            if self.file_perms.get("/mnt/data_pool") == "000":
+                return ExecutionResult(
+                    command=command, exit_code=1, stdout="", stderr="Permission denied"
+                )
+            return ExecutionResult(command=command, exit_code=0, stdout="ok\n", stderr="")
+
+        if "chmod 000 /mnt/data_pool" in cmd_clean:
+            self.file_perms["/mnt/data_pool"] = "000"
+            return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
+
+        if "chmod 755 /mnt/data_pool" in cmd_clean or "chmod 775 /mnt/data_pool" in cmd_clean:
+            self.file_perms["/mnt/data_pool"] = "755"
+            return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
+
+        # 11. CRIU & Process Inspection operations
+        if "pidof" in cmd_clean or "pgrep" in cmd_clean:
+            return ExecutionResult(command=command, exit_code=0, stdout="4242\n", stderr="")
+
+        if "criu dump" in cmd_clean:
+            return ExecutionResult(
+                command=command, exit_code=0, stdout="Dumping process 4242 OK", stderr=""
+            )
+
+        if "criu restore" in cmd_clean:
+            return ExecutionResult(
+                command=command, exit_code=0, stdout="Restoring process 4242 OK", stderr=""
+            )
+
+        if "kill -0" in cmd_clean:
+            return ExecutionResult(command=command, exit_code=0, stdout="alive", stderr="")
+
+        if "sha256sum" in cmd_clean:
+            path = cmd_clean.split("sha256sum", 1)[1].split("2>")[0].strip()
+            content = self.files.get(path, f"default_content_for_{path}")
+            h = hashlib.sha256(content.encode("utf-8")).hexdigest()
+            return ExecutionResult(command=command, exit_code=0, stdout=f"{h}  {path}\n", stderr="")
+
+        if "ss -tulpn" in cmd_clean or "netstat -tulpn" in cmd_clean:
+            return ExecutionResult(
+                command=command,
+                exit_code=0,
+                stdout="LISTEN 0 128 127.0.0.1:53 0.0.0.0:*\nLISTEN 0 128 0.0.0.0:22 0.0.0.0:*\n",
+                stderr="",
+            )
+
+        if "ps -eo rss" in cmd_clean:
+            return ExecutionResult(
+                command=command, exit_code=0, stdout="1024\n2048\n4096\n", stderr=""
+            )
+
+        # 12. File reading
         if cmd_clean.startswith("cat "):
             path = cmd_clean.split("cat ", 1)[1].strip().strip("'").strip('"')
             path = path.split(" 2>")[0].strip()

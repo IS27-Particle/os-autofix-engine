@@ -27,6 +27,7 @@ from engine.reporter import BenchmarkReporter
 from monitoring.dashboard import GLOBAL_DASHBOARD
 from monitoring.json_logger import setup_json_file_logging
 from monitoring.metrics import start_metrics_server
+from sandbox.base import BaseSandbox
 from sandbox.incus_sandbox import IncusSandbox
 from scenarios.registry import get_all_scenarios, get_scenario
 from trainer.train_grpo import train_grpo
@@ -1773,6 +1774,264 @@ def cmd_fuzz_cascading(
     console.print(f"Resolution:    [{color}]{'SUCCESS' if res.success else 'FAILED'}[/{color}]")
     console.print(f"MTTR:          [cyan]{res.mttr_seconds:.2f}s[/cyan]")
     console.print(f"Notes:         [white]{res.notes}[/white]")
+
+
+@app.command("shadow-exec")
+def cmd_shadow_exec(
+    scenario: Annotated[
+        str,
+        typer.Option("--scenario", "-s", help="Scenario name to test differentially"),
+    ] = "systemd_dns",
+    primary: Annotated[
+        str,
+        typer.Option("--primary", "-p", help="Primary sandbox name"),
+    ] = "canary-primary",
+    shadow: Annotated[
+        str,
+        typer.Option("--shadow", help="Shadow control sandbox name"),
+    ] = "canary-shadow",
+    threshold: Annotated[
+        float,
+        typer.Option("--threshold", "-t", help="Max allowed divergence score"),
+    ] = 0.05,
+    mermaid: Annotated[
+        bool,
+        typer.Option("--mermaid", "-m", help="Export Mermaid DAG diff syntax"),
+    ] = False,
+    output: Annotated[
+        str,
+        typer.Option("--output", "-o", help="Target JSON output path"),
+    ] = "",
+    mock_sandbox: Annotated[
+        bool,
+        typer.Option("--mock-sandbox", help="Run with in-memory mock sandboxes"),
+    ] = False,
+) -> None:
+    """Run twin sandbox differential state shadow evaluation comparing fixed vs baseline instances."""
+    console.print(
+        Panel.fit(
+            f"[bold cyan]OS-AutoFix Engine: Differential State Shadow Engine on '{scenario}'[/bold cyan]"
+        )
+    )
+
+    from engine.shadow_evaluator import ShadowEvaluator
+    from scenarios.registry import get_scenario
+
+    sc = get_scenario(scenario)
+    if not sc:
+        console.print(f"[bold red]Scenario '{scenario}' not found in registry.[/bold red]")
+        raise typer.Exit(1)
+
+    cfg = get_default_config()
+    cfg.llm.mock_mode = mock_sandbox
+
+    if mock_sandbox:
+        from tests.conftest import MockSandbox
+
+        def mock_factory(name: str) -> BaseSandbox:
+            return MockSandbox(name)
+
+        evaluator = ShadowEvaluator(
+            config=cfg, sandbox_factory=mock_factory, max_divergence_threshold=threshold
+        )
+    else:
+        evaluator = ShadowEvaluator(config=cfg, max_divergence_threshold=threshold)
+
+    report = asyncio.run(
+        evaluator.run_shadow_comparison(
+            scenario=sc,
+            primary_name=primary,
+            shadow_name=shadow,
+        )
+    )
+
+    stat_color = "green" if report.promoted else "red"
+    console.print(f"\nEvaluation ID:    [bold]{report.evaluation_id}[/bold]")
+    console.print(f"Primary Instance: [cyan]{report.primary_instance}[/cyan]")
+    console.print(f"Shadow Instance:  [yellow]{report.shadow_instance}[/yellow]")
+    console.print(f"Divergence Score: [bold]{report.divergence_score:.2%}[/bold]")
+    console.print(
+        f"Promotion Status: [{stat_color}]{'PROMOTED (Zero Regression)' if report.promoted else 'REJECTED / DIVERGED'}[/{stat_color}]"
+    )
+    console.print(f"Duration:         [white]{report.duration_seconds:.2f}s[/white]")
+
+    if mermaid:
+        console.print("\n[bold]Mermaid Topology Diff:[/bold]\n")
+        console.print(report.to_mermaid())
+
+    if output:
+        Path(output).write_text(json.dumps(report.to_dict(), indent=2), encoding="utf-8")
+        console.print(f"\n[bold green]Exported report to:[/bold green] [cyan]{output}[/cyan]")
+
+
+@app.command("checkpoint-proc")
+def cmd_checkpoint_proc(
+    instance: Annotated[
+        str,
+        typer.Option("--instance", "-i", help="Sandbox instance name"),
+    ] = "canary-criu-1",
+    daemon: Annotated[
+        str,
+        typer.Option("--daemon", "-d", help="Target daemon process name"),
+    ] = "systemd-resolved",
+    patch_cmd: Annotated[
+        str,
+        typer.Option("--patch-cmd", "-p", help="Hotpatch state mutation command"),
+    ] = "echo 'DNS=1.1.1.1' >> /etc/systemd/resolved.conf",
+    rollback_cmd: Annotated[
+        str,
+        typer.Option("--rollback-cmd", "-r", help="Fallback rollback command"),
+    ] = "sed -i '/DNS=1.1.1.1/d' /etc/systemd/resolved.conf",
+    tcp: Annotated[
+        bool,
+        typer.Option("--tcp", help="Preserve established TCP connections"),
+    ] = True,
+    mock_sandbox: Annotated[
+        bool,
+        typer.Option("--mock-sandbox", help="Run with in-memory mock sandbox"),
+    ] = False,
+) -> None:
+    """Checkpoint a running daemon process via CRIU, apply a patch, and restore without dropping connections."""
+    console.print(
+        Panel.fit(
+            f"[bold magenta]OS-AutoFix Engine: CRIU Process State Hotpatcher for '{daemon}'[/bold magenta]"
+        )
+    )
+
+    from engine.criu_state_preserver import CRIUStatePreserver
+
+    preserver = CRIUStatePreserver()
+    if mock_sandbox:
+        from tests.conftest import MockSandbox
+
+        sb: BaseSandbox = MockSandbox(instance)
+    else:
+        sb = IncusSandbox(instance)
+
+    res = asyncio.run(
+        preserver.hotpatch_with_preservation(
+            sandbox=sb,
+            daemon_name=daemon,
+            patch_command=patch_cmd,
+            rollback_command=rollback_cmd or None,
+            tcp_established=tcp,
+        )
+    )
+
+    color = "green" if res.restore_success else "red"
+    console.print(f"\nCheckpoint ID:   [bold]{res.checkpoint_id}[/bold]")
+    console.print(f"Target PID:      [cyan]{res.pid}[/cyan]")
+    console.print(f"Dump Success:    [green]{res.dump_success}[/green]")
+    console.print(
+        f"Restore Status:  [{color}]{'RESTORED & ACTIVE' if res.restore_success else 'FAILED'}[/{color}]"
+    )
+    console.print(f"Rolled Back:     [yellow]{res.rolled_back}[/yellow]")
+    console.print(f"Duration:        [white]{res.duration_seconds:.2f}s[/white]")
+
+
+@app.command("fleet-rollout")
+def cmd_fleet_rollout(
+    scenario: Annotated[
+        str,
+        typer.Option("--scenario", "-s", help="Target scenario name"),
+    ] = "systemd_dns",
+    fleet_size: Annotated[
+        int,
+        typer.Option("--fleet-size", "-n", help="Total fleet instance count"),
+    ] = 10,
+    error_threshold: Annotated[
+        float,
+        typer.Option("--error-threshold", "-e", help="Maximum allowable error rate before freeze"),
+    ] = 0.02,
+    patch_cmd: Annotated[
+        str,
+        typer.Option("--patch-cmd", "-p", help="Explicit patch command (or use Tri-Agent swarm)"),
+    ] = "",
+    mock_sandbox: Annotated[
+        bool,
+        typer.Option("--mock-sandbox", help="Run with in-memory mock sandboxes"),
+    ] = False,
+    output: Annotated[
+        str,
+        typer.Option("--output", "-o", help="Target JSON summary export path"),
+    ] = "",
+) -> None:
+    """Execute progressive multi-tier canary rollout across a fleet of Incus instances."""
+    console.print(
+        Panel.fit(
+            f"[bold yellow]OS-AutoFix Engine: Progressive Canary Fleet Rollout ({fleet_size} nodes)[/bold yellow]"
+        )
+    )
+
+    from engine.fleet_orchestrator import FleetRolloutOrchestrator
+    from scenarios.registry import get_scenario
+
+    sc = get_scenario(scenario)
+    if not sc:
+        console.print(f"[bold red]Scenario '{scenario}' not found in registry.[/bold red]")
+        raise typer.Exit(1)
+
+    cfg = get_default_config()
+    cfg.llm.mock_mode = mock_sandbox
+
+    if mock_sandbox:
+        from tests.conftest import MockSandbox
+
+        def mock_factory(name: str) -> BaseSandbox:
+            return MockSandbox(name)
+
+        orchestrator = FleetRolloutOrchestrator(
+            config=cfg,
+            sandbox_factory=mock_factory,
+            error_threshold=error_threshold,
+        )
+    else:
+        orchestrator = FleetRolloutOrchestrator(
+            config=cfg,
+            error_threshold=error_threshold,
+        )
+
+    res = asyncio.run(
+        orchestrator.execute_fleet_rollout(
+            scenario=sc,
+            fleet_size=fleet_size,
+            patch_command=patch_cmd or None,
+        )
+    )
+
+    color = "green" if res.final_status == "SUCCESS" else "red"
+    console.print(f"\nRollout ID:      [bold]{res.rollout_id}[/bold]")
+    console.print(f"Fleet Size:      [cyan]{res.total_fleet_size} nodes[/cyan]")
+    console.print(f"Status:          [{color}]{res.final_status}[/{color}]")
+    console.print(f"Total Duration:  [white]{res.total_duration_seconds:.2f}s[/white]")
+
+    table = Table(title="Progressive Tier Execution Breakdown")
+    table.add_column("Tier", style="bold cyan")
+    table.add_column("Share", justify="center")
+    table.add_column("Nodes", justify="center")
+    table.add_column("Success", style="green", justify="center")
+    table.add_column("Failures", style="red", justify="center")
+    table.add_column("Error Rate", justify="right")
+    table.add_column("MTTR", justify="right")
+    table.add_column("Passed", justify="center")
+
+    for t in res.tiers_executed:
+        table.add_row(
+            t.tier_name,
+            f"{t.percentage:.0%}",
+            str(t.nodes_count),
+            str(t.success_count),
+            str(t.failure_count),
+            f"{t.error_rate:.2%}",
+            f"{t.mttr_seconds:.2f}s",
+            "[green]YES[/green]" if t.passed else "[red]NO[/red]",
+        )
+
+    console.print(table)
+
+    if output:
+        Path(output).write_text(json.dumps(res.to_dict(), indent=2), encoding="utf-8")
+        console.print(f"\n[bold green]Exported summary to:[/bold green] [cyan]{output}[/cyan]")
 
 
 if __name__ == "__main__":
