@@ -107,6 +107,10 @@ def bench(
             help="Directory where benchmark markdown and JSON reports are saved",
         ),
     ] = "reports",
+    metrics_port: Annotated[
+        int,
+        typer.Option("--metrics-port", "-p", help="Prometheus metrics exporter port (0 to disable)"),
+    ] = 9100,
     mock_llm: Annotated[
         bool,
         typer.Option("--mock-llm", help="Use heuristic offline mock LLM for testing"),
@@ -119,6 +123,16 @@ def bench(
     """Run evaluation benchmark across diagnostic scenarios."""
     setup_logging(log_level)
     console.print(Panel.fit("[bold cyan]OS-AutoFix Engine: Benchmark Evaluation[/bold cyan]"))
+
+    metrics_server = None
+    if metrics_port > 0:
+        try:
+            metrics_server, _ = start_metrics_server(port=metrics_port)
+            console.print(
+                f"[dim]Prometheus metrics exporter active at http://0.0.0.0:{metrics_port}/metrics[/dim]"
+            )
+        except Exception as e:
+            console.print(f"[dim yellow]Metrics server notice: {e}[/dim yellow]")
 
     cfg = get_default_config()
     cfg.workers = workers
