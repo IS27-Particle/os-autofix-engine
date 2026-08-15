@@ -63,26 +63,29 @@ flowchart TD
 3. [Endpoint Configuration](#-endpoint-configuration)
 4. [Installation](#-installation)
 5. [CLI Usage](#-cli-usage)
-   - [Host Pre-Flight Doctor (`doctor`)](#1-host-pre-flight-doctor-doctor)
-   - [Real-Time Monitoring & Telemetry (`monitor`)](#2-real-time-monitoring--telemetry-monitor)
-   - [Environment Health Check (`test-env`)](#3-environment-health-check-test-env)
-   - [Scenario Benchmarking (`bench`)](#4-scenario-benchmarking-bench)
-   - [Dataset Collection (`collect`)](#5-dataset-collection-collect)
-   - [SFT 4-bit LoRA Training (`train-sft`)](#6-sft-4-bit-lora-training-train-sft)
-   - [GRPO Policy Optimization (`train-grpo`)](#7-grpo-policy-optimization-train-grpo)
-   - [Model Packaging & Ollama Deployment (`deploy`)](#8-model-packaging--ollama-deployment-deploy)
-   - [Continuous Self-Improvement Loop (`loop`)](#9-continuous-self-improvement-loop-loop)
-   - [Production Systemd Daemon Deployment (`deploy-daemon`)](#10-production-systemd-daemon-deployment-deploy-daemon)
-   - [Automated GitHub Repo Setup (`git-init`)](#11-automated-github-repo-setup-git-init)
-6. [Supported Diagnostic Scenarios](#-supported-diagnostic-scenarios)
-7. [Prometheus Metrics & Grafana](#-prometheus-metrics--grafana)
-8. [Training Data Export Formats](#-training-data-export-formats)
-9. [Testing & CI](#-testing--ci)
+   - [Model Context Protocol (MCP) Server (`mcp`)](#1-model-context-protocol-mcp-server-mcp)
+   - [Host Pre-Flight Doctor (`doctor`)](#2-host-pre-flight-doctor-doctor)
+   - [Real-Time Monitoring & Telemetry (`monitor`)](#3-real-time-monitoring--telemetry-monitor)
+   - [Environment Health Check (`test-env`)](#4-environment-health-check-test-env)
+   - [Scenario Benchmarking (`bench`)](#5-scenario-benchmarking-bench)
+   - [Dataset Collection (`collect`)](#6-dataset-collection-collect)
+   - [SFT 4-bit LoRA Training (`train-sft`)](#7-sft-4-bit-lora-training-train-sft)
+   - [GRPO Policy Optimization (`train-grpo`)](#8-grpo-policy-optimization-train-grpo)
+   - [Model Packaging & Ollama Deployment (`deploy`)](#9-model-packaging--ollama-deployment-deploy)
+   - [Continuous Self-Improvement Loop (`loop`)](#10-continuous-self-improvement-loop-loop)
+   - [Production Systemd Daemon Deployment (`deploy-daemon`)](#11-production-systemd-daemon-deployment-deploy-daemon)
+   - [Automated GitHub Repo Setup (`git-init`)](#12-automated-github-repo-setup-git-init)
+6. [Model Context Protocol (MCP) Integration](#-model-context-protocol-mcp-integration)
+7. [Supported Diagnostic Scenarios](#-supported-diagnostic-scenarios)
+8. [Prometheus Metrics & Grafana](#-prometheus-metrics--grafana)
+9. [Training Data Export Formats](#-training-data-export-formats)
+10. [Testing & CI](#-testing--ci)
 
 ---
 
 ## ✨ Key Features
 
+- **Model Context Protocol (MCP) Server**: Exposes sandbox creation, fault injection, command execution, and benchmark metrics over stdio / SSE to Claude Desktop, Open-WebUI, and AI agent frameworks.
 - **Native Incus Hypervisor Virtualization**: Ephemeral VM (`--vm`) or container isolation.
 - **Zero-Copy Sub-Second Rollbacks**: Instant ZFS/Btrfs snapshotting before and after fault injection.
 - **Guest Agent Polling**: Automatic `incus-agent` readiness detection with exponential backoff.
@@ -165,14 +168,25 @@ pip install -e .
 
 The CLI is powered by `typer` and `rich`. Run `python3 main.py --help` for full documentation.
 
-### 1. Host Pre-Flight Doctor (`doctor`)
+### 1. Model Context Protocol (MCP) Server (`mcp`)
+Starts the MCP server over standard I/O (stdio) or Server-Sent Events (SSE) for Claude Desktop, Open-WebUI, or external AI agents:
+
+```bash
+# Run MCP server on stdio (for Claude Desktop / IDE agents)
+python3 main.py mcp
+
+# Run MCP server on SSE (for remote network agents)
+python3 main.py mcp --transport sse --port 8080
+```
+
+### 2. Host Pre-Flight Doctor (`doctor`)
 Runs pre-flight diagnostics for KVM virtualization, Incus CLI/storage/bridges, and remote LLM endpoints:
 
 ```bash
 python3 main.py doctor
 ```
 
-### 2. Real-Time Monitoring & Telemetry (`monitor`)
+### 3. Real-Time Monitoring & Telemetry (`monitor`)
 Launch the live Rich terminal dashboard or start the standalone Prometheus metrics exporter:
 
 ```bash
@@ -273,12 +287,59 @@ Installs and enables the `os-autofix.service` and `os-autofix-metrics.service` u
 python3 main.py deploy-daemon --systemd-dir /etc/systemd/system --enable
 ```
 
-### 11. Automated GitHub Repo Setup (`git-init`)
+### 12. Automated GitHub Repo Setup (`git-init`)
 Initializes the git repository, stages all code, creates the remote repo, and pushes initial commits:
 
 ```bash
 python3 main.py git-init --name os-autofix-engine --public
 ```
+
+---
+
+## 🔌 Model Context Protocol (MCP) Integration
+
+The **os-autofix-engine** includes a native **Model Context Protocol (MCP)** server enabling Claude Desktop, Open-WebUI, Cursor, and agent frameworks to directly control Incus sandboxes, inject faults, execute bash commands, and run evaluation benchmarks.
+
+### Registering with Claude Desktop
+
+Run the registration helper to generate configuration snippets:
+```bash
+python3 scripts/register_mcp.py --write-claude
+```
+
+Or manually add to `~/.config/Claude/claude_desktop_config.json`:
+```json
+{
+  "mcpServers": {
+    "os-autofix": {
+      "command": "python3",
+      "args": ["/Docs/Programming/GitHub/os-autofix-engine/main.py", "mcp"],
+      "env": {
+        "OLLAMA_BASE_URL": "http://10.0.0.25:11434/v1",
+        "OPEN_WEBUI_BASE_URL": "https://ai.is27.duckdns.org/api"
+      }
+    }
+  }
+}
+```
+
+### Exposed MCP Tools
+
+| MCP Tool Name | Parameters | Description |
+|---|---|---|
+| `list_scenarios` | None | Lists all 7 available diagnostic scenarios and descriptions. |
+| `create_sandbox` | `instance_type`, `image` | Spawns an isolated Incus container or VM and creates baseline snapshot. |
+| `inject_fault` | `instance_id`, `scenario_name` | Sets up baseline scenario state, injects fault, and verifies initial breakage. |
+| `exec_command` | `instance_id`, `command`, `timeout_seconds` | Executes non-interactive shell command with 2000-character truncation and timeout protection. |
+| `verify_fix` | `instance_id`, `scenario_name` | Executes scenario verifier assertions and returns boolean pass/fail status. |
+| `revert_sandbox` | `instance_id`, `snapshot_name` | Instant CoW rollback to `snap-baseline` or specified snapshot. |
+| `destroy_sandbox` | `instance_id` | Deletes ephemeral container/VM and releases host resources. |
+| `run_benchmark` | `scenarios`, `workers`, `iterations`, `model` | Executes parallel multi-worker benchmark and returns aggregated metrics. |
+
+### Exposed MCP Resources
+
+- `report://benchmark/latest`: Latest evaluation benchmark report in Markdown.
+- `status://cluster`: Live host hardware, active sandboxes count, storage pools, and Ollama endpoint health.
 
 ---
 

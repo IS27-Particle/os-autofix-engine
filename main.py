@@ -766,5 +766,26 @@ def cmd_list_scenarios() -> None:
     console.print(table)
 
 
+@app.command("mcp")
+def cmd_mcp(
+    transport: Annotated[
+        str,
+        typer.Option("--transport", "-t", help="MCP transport mode: 'stdio' or 'sse'"),
+    ] = "stdio",
+    port: Annotated[
+        int,
+        typer.Option("--port", "-p", help="Port for SSE transport"),
+    ] = 8080,
+    host: Annotated[
+        str,
+        typer.Option("--host", "-h", help="Host address for SSE transport"),
+    ] = "0.0.0.0",
+) -> None:
+    """Start the Model Context Protocol (MCP) server exposing Incus sandbox tools and resources."""
+    from mcp_server.server import run_mcp_server
+
+    run_mcp_server(transport=transport, port=port, host=host)
+
+
 if __name__ == "__main__":
     app()
