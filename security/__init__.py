@@ -1,4 +1,4 @@
-"""Security, eBPF syscall safety auditing, approval gate, and network chaos package."""
+"""Security, eBPF syscall safety auditing, approval gate, MAC synthesis, and network chaos package."""
 
 from security.approval_gate import (
     GLOBAL_APPROVAL_GATE,
@@ -16,6 +16,12 @@ from security.ebpf_network_chaos import (
     EbpfNetworkChaos,
     NetworkChaosSpec,
 )
+from security.mandatory_access_control import (
+    AppArmorProfile,
+    AppArmorRule,
+    MacProfileSynthesizer,
+    MacType,
+)
 
 __all__ = [
     "SyscallSecurityAuditor",
@@ -28,4 +34,8 @@ __all__ = [
     "GLOBAL_APPROVAL_GATE",
     "EbpfNetworkChaos",
     "NetworkChaosSpec",
+    "MacProfileSynthesizer",
+    "AppArmorProfile",
+    "AppArmorRule",
+    "MacType",
 ]

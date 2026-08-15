@@ -216,13 +216,17 @@ class MockSandbox(BaseSandbox):
             )
 
         # 9. Generic echo redirection and file removal
-        if "echo " in cmd_clean and " > " in cmd_clean:
-            parts = cmd_clean.split(" > ", 1)
+        if "echo " in cmd_clean and (">>" in cmd_clean or " > " in cmd_clean):
+            delim = ">>" if ">>" in cmd_clean else " > "
+            parts = cmd_clean.split(delim, 1)
             content = (
                 parts[0].replace("echo ", "").strip().strip("'").strip('"').replace('\\"', '"')
             )
             filepath = parts[1].split(" 2>")[0].strip().strip("'").strip('"')
-            self.files[filepath] = content + "\n"
+            if delim == ">>" and filepath in self.files:
+                self.files[filepath] += content + "\n"
+            else:
+                self.files[filepath] = content + "\n"
             return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
 
         if cmd_clean.startswith("rm -f "):
@@ -230,7 +234,52 @@ class MockSandbox(BaseSandbox):
             self.files.pop(filepath, None)
             return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
 
-        # 10. File reading
+        # 10. MAC & Custom daemon operations
+        if "cat << 'EOF' > /etc/apparmor.d" in command or "deny /etc/**" in command:
+            self.files["/etc/apparmor.d/opt.custom_daemon.daemon.sh"] = (
+                "profile custom_daemon /opt/custom_daemon/daemon.sh {\n  deny /etc/** r,\n}\n"
+            )
+            return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
+
+        if "sed -i" in cmd_clean and "/etc/apparmor.d" in cmd_clean:
+            if "/etc/apparmor.d/opt.custom_daemon.daemon.sh" in self.files:
+                self.files["/etc/apparmor.d/opt.custom_daemon.daemon.sh"] = self.files[
+                    "/etc/apparmor.d/opt.custom_daemon.daemon.sh"
+                ].replace("deny /etc/**", "/etc/**")
+            return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
+
+        if "daemon.sh" in cmd_clean:
+            profile_content = self.files.get("/etc/apparmor.d/opt.custom_daemon.daemon.sh", "")
+            if "deny /etc/**" in profile_content:
+                return ExecutionResult(
+                    command=command,
+                    exit_code=13,
+                    stdout="",
+                    stderr="apparmor: Permission denied (open /etc/resolv.conf)",
+                )
+            return ExecutionResult(
+                command=command,
+                exit_code=0,
+                stdout="CUSTOM_DAEMON_OK\n",
+                stderr="",
+            )
+
+        if "chmod 000" in cmd_clean and "/etc/hosts" in cmd_clean:
+            self.file_perms["/etc/hosts"] = "000"
+            self.file_perms["/tmp"] = "000"
+            return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
+
+        if "chmod 755" in cmd_clean and "/etc/hosts" in cmd_clean:
+            self.file_perms["/etc/hosts"] = "755"
+            self.file_perms["/tmp"] = "755"
+            return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
+
+        if "test -r /etc/hosts" in cmd_clean:
+            if self.file_perms.get("/etc/hosts") == "000":
+                return ExecutionResult(command=command, exit_code=1, stdout="", stderr="")
+            return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
+
+        # 11. File reading
         if cmd_clean.startswith("cat "):
             path = cmd_clean.split("cat ", 1)[1].strip().strip("'").strip('"')
             path = path.split(" 2>")[0].strip()
@@ -245,7 +294,7 @@ class MockSandbox(BaseSandbox):
                 stderr=f"cat: {path}: No such file or directory",
             )
 
-        # 11. Fallback success
+        # 12. Fallback success
         return ExecutionResult(command=command, exit_code=0, stdout="OK", stderr="")
 
     async def get_state(self) -> dict[str, Any]:

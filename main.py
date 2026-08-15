@@ -1629,5 +1629,151 @@ def cmd_cluster_status() -> None:
     console.print(table)
 
 
+@app.command("trace-causal")
+def cmd_trace_causal(
+    instance: Annotated[
+        str,
+        typer.Option("--instance", "-i", help="Target Incus instance name to inspect"),
+    ] = "canary-trace-1",
+    render_mermaid: Annotated[
+        bool,
+        typer.Option("--mermaid", help="Render Mermaid DAG diagram instead of table"),
+    ] = False,
+    output: Annotated[
+        str,
+        typer.Option("--output", "-o", help="Optional output JSON path for graph summary"),
+    ] = "",
+) -> None:
+    """Analyze an active sandbox instance and render the causal dependency fault graph."""
+    console.print(
+        Panel.fit(
+            f"[bold cyan]OS-AutoFix Engine: Causal Graph & Root-Cause Tracer on '{instance}'[/bold cyan]"
+        )
+    )
+
+    from engine.causal_tracer import CausalTracer
+    from sandbox.incus_sandbox import IncusSandbox
+
+    sb = IncusSandbox(instance_name=instance)
+    tracer = CausalTracer()
+
+    async def _run() -> None:
+        graph = await tracer.trace_sandbox(sb)
+        hypotheses = graph.find_root_causes()
+
+        if render_mermaid:
+            console.print("\n[bold]Mermaid Dependency Diagram:[/bold]\n")
+            console.print(f"```mermaid\n{graph.to_mermaid()}\n```")
+        else:
+            table = Table(
+                title="Root-Cause Diagnostic Hypotheses", show_header=True, header_style="bold cyan"
+            )
+            table.add_column("Rank", justify="center", style="bold green")
+            table.add_column("Confidence", justify="center", style="bold yellow")
+            table.add_column("Component", style="cyan")
+            table.add_column("Type", style="magenta")
+            table.add_column("Diagnostic Summary", style="white")
+
+            for idx, h in enumerate(hypotheses, 1):
+                table.add_row(
+                    str(idx),
+                    f"{h.confidence_score * 100:.0f}%",
+                    h.label,
+                    h.node_type,
+                    h.summary,
+                )
+
+            if not hypotheses:
+                table.add_row("-", "100%", "System", "clean", "No failure propagation detected.")
+
+            console.print(table)
+
+        if output:
+            import json
+
+            Path(output).write_text(json.dumps(graph.to_dict(), indent=2), encoding="utf-8")
+            console.print(f"\n[green]Exported causal graph JSON to:[/green] [cyan]{output}[/cyan]")
+
+    asyncio.run(_run())
+
+
+@app.command("synthesize-mac")
+def cmd_synthesize_mac(
+    binary: Annotated[
+        str,
+        typer.Option("--binary", "-b", help="Target daemon executable path to profile"),
+    ] = "/usr/sbin/systemd-resolved",
+    profile_name: Annotated[
+        str,
+        typer.Option("--profile-name", "-p", help="AppArmor profile name"),
+    ] = "systemd-resolved",
+    output: Annotated[
+        str,
+        typer.Option("--output", "-o", help="Target output profile path"),
+    ] = "",
+) -> None:
+    """Profile target daemon and synthesize hardened least-privilege AppArmor / SELinux policy."""
+    console.print(
+        Panel.fit(
+            f"[bold magenta]OS-AutoFix Engine: MAC Profile Synthesizer for '{binary}'[/bold magenta]"
+        )
+    )
+
+    from security.mandatory_access_control import MacProfileSynthesizer
+
+    synth = MacProfileSynthesizer()
+    profile = synth.synthesize_apparmor(binary_path=binary, profile_name=profile_name)
+    rendered = profile.render()
+
+    console.print("\n[bold]Synthesized AppArmor Profile:[/bold]\n")
+    console.print(rendered)
+
+    if output:
+        Path(output).write_text(rendered, encoding="utf-8")
+        console.print(f"[bold green]Saved profile to:[/bold green] [cyan]{output}[/cyan]")
+
+
+@app.command("fuzz-cascading")
+def cmd_fuzz_cascading(
+    domains: Annotated[
+        str,
+        typer.Option(
+            "--domains",
+            "-d",
+            help="Comma-separated failure domains: network,storage,permissions,security",
+        ),
+    ] = "network,storage,permissions",
+    canary_instance: Annotated[
+        str,
+        typer.Option("--instance", "-i", help="Canary sandbox instance name"),
+    ] = "canary-fuzz-1",
+) -> None:
+    """Run combinatorial cascading fault fuzzing passes across multiple system domains."""
+    console.print(
+        Panel.fit(
+            f"[bold red]OS-AutoFix Engine: Combinatorial Cascading Fault Fuzzer ({domains})[/bold red]"
+        )
+    )
+
+    from engine.cascading_fuzzer import CascadingFaultFuzzer
+
+    fuzzer = CascadingFaultFuzzer()
+    domain_list = [d.strip() for d in domains.split(",") if d.strip()]
+
+    res = asyncio.run(
+        fuzzer.run_fuzzing_experiment(
+            domains=domain_list,
+            sandbox_name=canary_instance,
+        )
+    )
+
+    color = "green" if res.success else "red"
+    console.print(f"\nExperiment ID: [bold]{res.fuzz_id}[/bold]")
+    console.print(f"Domains:       [yellow]{', '.join(res.domains_injected)}[/yellow]")
+    console.print(f"Resolution:    [{color}]{'SUCCESS' if res.success else 'FAILED'}[/{color}]")
+    console.print(f"MTTR:          [cyan]{res.mttr_seconds:.2f}s[/cyan]")
+    console.print(f"Notes:         [white]{res.notes}[/white]")
+
+
 if __name__ == "__main__":
     app()

@@ -38,6 +38,7 @@ async def test_wireguard_mesh_scenario_lifecycle() -> None:
 
     # 3. Remediate
     await nodes["node-1"].execute("rm -f /tmp/wg_fault.flag")
+    await nodes["node-2"].execute("echo 'PEER_READY=2' > /etc/wireguard/wg0.conf")
     await nodes["node-2"].execute("rm -f /tmp/wg_fault.flag")
     ok_remed, _ = await sc.verify(nodes)
     assert ok_remed is True

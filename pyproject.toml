@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "os-autofix-engine"
-version = "0.7.0"
-description = "Autonomous OS-level policy training, multi-node Raft federation, eBPF network chaos, cross-host remediation, offline vector runbook retrieval, and Incus VM evaluation harness"
+version = "0.8.0"
+description = "Autonomous OS-level policy training, causal graph root-cause tracing, dynamic MAC synthesis, cascading fault fuzzing, multi-node Raft federation, and Incus VM evaluation harness"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

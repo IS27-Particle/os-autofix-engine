@@ -4,6 +4,7 @@ from scenarios.base_scenario import BaseScenario
 from scenarios.docker_socket import DockerSocketScenario
 from scenarios.file_permissions import FilePermissionsScenario
 from scenarios.iptables_lockout import IPTablesLockoutScenario
+from scenarios.mac_enforcement import MacEnforcementScenario
 from scenarios.network_routing import NetworkRoutingScenario
 from scenarios.package_corruption import PackageCorruptionScenario
 from scenarios.registry import (
@@ -25,6 +26,7 @@ __all__ = [
     "ZFSMountScenario",
     "DockerSocketScenario",
     "IPTablesLockoutScenario",
+    "MacEnforcementScenario",
     "ScenarioSynthesizer",
     "get_scenario",
     "list_scenarios",
