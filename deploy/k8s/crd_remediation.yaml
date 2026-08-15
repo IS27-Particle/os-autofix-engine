@@ -1,0 +1,49 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: autofixpolicies.autofix.antigravity.ai
+spec:
+  group: autofix.antigravity.ai
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                targetDomains:
+                  type: array
+                  items:
+                    type: string
+                minSafetyScore:
+                  type: number
+                allowKernelReload:
+                  type: boolean
+                requireInteractiveApproval:
+                  type: boolean
+                confidentialAttestationRequired:
+                  type: boolean
+                webhookAlertEndpoint:
+                  type: string
+            status:
+              type: object
+              properties:
+                lastRemediationTimestamp:
+                  type: string
+                activeFaultsDetected:
+                  type: integer
+                remediationStatus:
+                  type: string
+      subresources:
+        status: {}
+  scope: Cluster
+  names:
+    plural: autofixpolicies
+    singular: autofixpolicy
+    kind: AutofixPolicy
+    shortNames:
+      - afp

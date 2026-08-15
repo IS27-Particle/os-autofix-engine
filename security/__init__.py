@@ -7,6 +7,12 @@ from security.approval_gate import (
     ApprovalStatus,
     InteractiveApprovalGate,
 )
+from security.confidential_attestation import (
+    AttestationReport,
+    AttestationVerificationResult,
+    ConfidentialAttestor,
+    HardwareRootOfTrust,
+)
 from security.ebpf_auditor import (
     SecurityAuditReport,
     SyscallAuditEvent,
@@ -27,6 +33,12 @@ from security.mandatory_access_control import (
     MacProfileSynthesizer,
     MacType,
 )
+from security.threat_hunting import (
+    OSQueryThreatHunter,
+    ThreatHuntFinding,
+    ThreatHuntReport,
+    ThreatSeverity,
+)
 
 __all__ = [
     "SyscallSecurityAuditor",
@@ -46,4 +58,12 @@ __all__ = [
     "FormalStateVerifier",
     "SMTProofResult",
     "VerificationStatus",
+    "ConfidentialAttestor",
+    "AttestationReport",
+    "AttestationVerificationResult",
+    "HardwareRootOfTrust",
+    "OSQueryThreatHunter",
+    "ThreatHuntFinding",
+    "ThreatHuntReport",
+    "ThreatSeverity",
 ]

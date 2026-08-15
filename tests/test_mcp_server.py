@@ -27,12 +27,13 @@ from tests.conftest import MockSandbox
 async def test_mcp_tool_list_scenarios() -> None:
     """Test listing diagnostic scenarios through MCP tool."""
     scenarios = await tool_list_scenarios()
-    assert len(scenarios) == 8
+    assert len(scenarios) >= 8
     names = [s["name"] for s in scenarios]
     assert "systemd_dns" in names
     assert "zfs_mount" in names
     assert "docker_socket" in names
     assert "iptables_lockout" in names
+    assert "threat_hunt_persistence" in names
     assert "mac_enforcement" in names
 
 

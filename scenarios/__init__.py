@@ -15,6 +15,7 @@ from scenarios.registry import (
 )
 from scenarios.synthesizer import ScenarioSynthesizer
 from scenarios.systemd_dns import SystemdDNSScenario
+from scenarios.threat_hunt_persistence import ThreatHuntPersistenceScenario
 from scenarios.zfs_mount import ZFSMountScenario
 
 __all__ = [
@@ -27,6 +28,7 @@ __all__ = [
     "DockerSocketScenario",
     "IPTablesLockoutScenario",
     "MacEnforcementScenario",
+    "ThreatHuntPersistenceScenario",
     "ScenarioSynthesizer",
     "get_scenario",
     "list_scenarios",

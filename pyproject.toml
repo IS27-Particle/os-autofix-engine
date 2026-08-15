@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "os-autofix-engine"
-version = "1.0.0"
-description = "Enterprise Autonomous OS-Level Policy Engine: SMT Formal Verification, Edge Distillation, Distributed OTel Tracing, and Incus Evaluation Harness"
+version = "1.1.0"
+description = "Enterprise Autonomous OS-Level Policy Engine: Multi-Hypervisor Drivers (Firecracker/Proxmox), Confidential Attestation, OSQuery Threat Hunting, and SMT Formal Verification"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

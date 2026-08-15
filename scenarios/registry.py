@@ -10,6 +10,7 @@ from scenarios.mac_enforcement import MacEnforcementScenario
 from scenarios.network_routing import NetworkRoutingScenario
 from scenarios.package_corruption import PackageCorruptionScenario
 from scenarios.systemd_dns import SystemdDNSScenario
+from scenarios.threat_hunt_persistence import ThreatHuntPersistenceScenario
 from scenarios.zfs_mount import ZFSMountScenario
 
 _REGISTRY: dict[str, type[BaseScenario]] = {
@@ -21,6 +22,7 @@ _REGISTRY: dict[str, type[BaseScenario]] = {
     DockerSocketScenario.name: DockerSocketScenario,
     IPTablesLockoutScenario.name: IPTablesLockoutScenario,
     MacEnforcementScenario.name: MacEnforcementScenario,
+    ThreatHuntPersistenceScenario.name: ThreatHuntPersistenceScenario,
 }
 
 

@@ -10,7 +10,7 @@ import sys
 import time
 import uuid
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 import typer
 from rich.console import Console
@@ -2236,6 +2236,178 @@ def cmd_build_dist(
 
     man_path = packager.generate_manpage(out_p)
     console.print(f"  • [bold green]Unix Manpage:[/bold green]      [cyan]{man_path}[/cyan]")
+
+
+@app.command("threat-hunt")
+def cmd_threat_hunt(
+    instance: Annotated[
+        str,
+        typer.Option("--instance", "-i", help="Target sandbox instance identifier"),
+    ] = "canary-threat-hunt",
+    mock_sandbox: Annotated[
+        bool,
+        typer.Option("--mock-sandbox", help="Run against simulated sandbox"),
+    ] = False,
+    output: Annotated[
+        str,
+        typer.Option("--output", "-o", help="Path to save threat report JSON"),
+    ] = "",
+) -> None:
+    """Run live OSQuery forensic threat hunting against cron persistence, rootkits, and raw sockets."""
+    console.print(
+        Panel.fit(
+            f"[bold red]OS-AutoFix Engine: OSQuery Threat-Hunting Engine on '{instance}'[/bold red]"
+        )
+    )
+
+    from sandbox.factory import create_sandbox
+    from security.threat_hunting import OSQueryThreatHunter
+
+    sb = create_sandbox("mock" if mock_sandbox else "incus", instance_name=instance)
+    hunter = OSQueryThreatHunter()
+
+    async def _hunt() -> Any:
+        await sb.setup()
+        return await hunter.run_full_threat_hunt(sb, target_name=instance)
+
+    report = asyncio.run(_hunt())
+
+    color = "green" if report.clean else "red"
+    console.print(f"\nReport ID:       [bold]{report.report_id}[/bold]")
+    console.print(f"Target:          [cyan]{report.target_name}[/cyan]")
+    console.print(f"System Clean:    [{color}]{report.clean}[/{color}]")
+    console.print(f"Active Threats:  [bold {color}]{report.critical_high_count}[/bold {color}]")
+    console.print(f"Scan Duration:   [white]{report.duration_seconds:.2f}s[/white]")
+
+    if report.findings:
+        console.print("\n[bold red]Forensic Threat Detections:[/bold red]")
+        table = Table(title="Detected Persistence / Rootkits")
+        table.add_column("Rule Name", style="bold yellow")
+        table.add_column("Severity", style="bold red")
+        table.add_column("Category", style="cyan")
+        table.add_column("Action", style="green")
+
+        for f in report.findings:
+            table.add_row(f.rule_name, f.severity.value, f.category, f.recommended_action)
+        console.print(table)
+
+    if output:
+        Path(output).write_text(json.dumps(report.to_dict(), indent=2), encoding="utf-8")
+        console.print(
+            f"\n[bold green]Exported threat report to:[/bold green] [cyan]{output}[/cyan]"
+        )
+
+
+@app.command("attest-host")
+def cmd_attest_host(
+    golden: Annotated[
+        str,
+        typer.Option("--golden", "-g", help="Expected golden measurement digest hex"),
+    ] = "",
+    strict: Annotated[
+        bool,
+        typer.Option("--strict", help="Enforce strict attestation verification"),
+    ] = False,
+    output: Annotated[
+        str,
+        typer.Option("--output", "-o", help="Path to export attestation report JSON"),
+    ] = "",
+) -> None:
+    """Validate hardware-rooted Confidential VM Remote Attestation (AMD SEV-SNP / Intel TDX)."""
+    console.print(
+        Panel.fit(
+            "[bold cyan]OS-AutoFix Engine: Confidential Computing Remote Attestation[/bold cyan]"
+        )
+    )
+
+    from security.confidential_attestation import ConfidentialAttestor
+
+    attestor = ConfidentialAttestor(golden_measurement=golden or None, enforce_strict=strict)
+    report = attestor.generate_attestation_report()
+    result = attestor.verify_attestation(report)
+
+    color = "green" if result.verified else "red"
+    console.print(f"\nHardware TEE:    [bold cyan]{result.hardware_type.value}[/bold cyan]")
+    console.print(f"Measurement:     [white]{result.measurement_digest[:32]}...[/white]")
+    console.print(f"Verified:        [{color}]{result.verified}[/{color}]")
+    console.print(f"Signature:       [{color}]{result.signature_verified}[/{color}]")
+    console.print(f"Details:         [white]{result.details}[/white]")
+
+    if output:
+        Path(output).write_text(json.dumps(result.to_dict(), indent=2), encoding="utf-8")
+        console.print(
+            f"\n[bold green]Exported attestation report to:[/bold green] [cyan]{output}[/cyan]"
+        )
+
+
+@app.command("bench-microvm")
+def cmd_bench_microvm(
+    vms: Annotated[
+        int,
+        typer.Option("--vms", "-n", help="Number of parallel Firecracker MicroVMs"),
+    ] = 5,
+    mock: Annotated[
+        bool,
+        typer.Option("--mock", help="Run in mock/emulated mode"),
+    ] = True,
+    output: Annotated[
+        str,
+        typer.Option("--output", "-o", help="Output summary report JSON"),
+    ] = "",
+) -> None:
+    """Run high-throughput benchmarking across parallel Firecracker microVMs."""
+    console.print(
+        Panel.fit(
+            f"[bold magenta]OS-AutoFix Engine: Firecracker MicroVM Benchmark ({vms} instances)[/bold magenta]"
+        )
+    )
+
+    from sandbox.drivers.firecracker_sandbox import FirecrackerSandbox
+
+    async def _run_bench() -> dict[str, Any]:
+        start = time.monotonic()
+        sandboxes = [
+            FirecrackerSandbox(instance_name=f"bench-fc-{i}", mock_mode=mock) for i in range(vms)
+        ]
+
+        # 1. Parallel setup
+        await asyncio.gather(*(sb.setup() for sb in sandboxes))
+
+        # 2. Parallel snapshot create
+        await asyncio.gather(*(sb.create_snapshot("baseline") for sb in sandboxes))
+
+        # 3. Parallel command executions
+        exec_tasks = [
+            sb.execute("echo 'nameserver 1.1.1.1' > /etc/resolv.conf") for sb in sandboxes
+        ]
+        exec_results = await asyncio.gather(*exec_tasks)
+
+        # 4. Parallel rollback
+        await asyncio.gather(*(sb.revert("baseline") for sb in sandboxes))
+
+        # 5. Parallel cleanup
+        await asyncio.gather(*(sb.cleanup() for sb in sandboxes))
+
+        duration = round(time.monotonic() - start, 3)
+        return {
+            "vms_count": vms,
+            "mock_mode": mock,
+            "total_duration_seconds": duration,
+            "throughput_vms_per_second": round(vms / (duration or 1e-6), 2),
+            "success": all(r.success for r in exec_results),
+        }
+
+    summary = asyncio.run(_run_bench())
+
+    console.print(f"\nTotal MicroVMs:  [cyan]{summary['vms_count']}[/cyan]")
+    console.print(f"Total Duration:  [white]{summary['total_duration_seconds']:.3f}s[/white]")
+    console.print(
+        f"Throughput:      [bold green]{summary['throughput_vms_per_second']} microVMs/s[/bold green]"
+    )
+
+    if output:
+        Path(output).write_text(json.dumps(summary, indent=2), encoding="utf-8")
+        console.print(f"\n[bold green]Saved benchmark to:[/bold green] [cyan]{output}[/cyan]")
 
 
 if __name__ == "__main__":

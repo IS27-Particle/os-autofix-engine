@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: os-autofix-node-agent
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: os-autofix-engine
+    app.kubernetes.io/component: node-healer
+    app.kubernetes.io/version: "1.1.0"
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: os-autofix-engine
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: os-autofix-engine
+    spec:
+      hostPID: true
+      hostNetwork: true
+      hostIPC: true
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: os-autofix-daemon
+          image: ghcr.io/is27-particle/os-autofix-engine:v1.1.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - /usr/bin/os-autofix
+            - watchdog
+            - --live
+            - --min-safety-score
+            - "0.85"
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: OLLAMA_ENDPOINT
+              value: "http://10.0.0.25:11434/v1"
+            - name: OPENWEBUI_ENDPOINT
+              value: "https://ai.is27.duckdns.org/api"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://tempo.monitoring.svc.cluster.local:4318"
+          securityContext:
+            privileged: true
+            capabilities:
+              add:
+                - SYS_ADMIN
+                - SYS_PTRACE
+                - NET_ADMIN
+                - BPF
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          volumeMounts:
+            - name: host-root
+              mountPath: /host
+              readOnly: false
+            - name: incus-sock
+              mountPath: /var/run/incus
+              readOnly: false
+            - name: docker-sock
+              mountPath: /var/run/docker.sock
+              readOnly: false
+            - name: journal-logs
+              mountPath: /var/log/journal
+              readOnly: true
+            - name: sys-fs
+              mountPath: /sys
+              readOnly: true
+      volumes:
+        - name: host-root
+          hostPath:
+            path: /
+        - name: incus-sock
+          hostPath:
+            path: /var/run/incus
+        - name: docker-sock
+          hostPath:
+            path: /var/run/docker.sock
+        - name: journal-logs
+          hostPath:
+            path: /var/log/journal
+        - name: sys-fs
+          hostPath:
+            path: /sys
