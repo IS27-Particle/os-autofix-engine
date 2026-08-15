@@ -1,0 +1,22 @@
+[Unit]
+Description=OS-AutoFix Autonomous Continuous Self-Improvement Daemon
+After=network.target incus.service
+Wants=incus.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/Docs/Programming/GitHub/os-autofix-engine
+Environment="PYTHONUNBUFFERED=1"
+Environment="OLLAMA_BASE_URL=http://10.0.0.25:11434/v1"
+Environment="OPEN_WEBUI_BASE_URL=https://ai.is27.duckdns.org/api"
+Environment="MODEL_NAME=qwen2.5-coder:7b"
+Environment="WORKER_COUNT=4"
+ExecStart=/usr/bin/python3 main.py loop --iterations 10 --samples 6 --type container --training-type sft
+Restart=always
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

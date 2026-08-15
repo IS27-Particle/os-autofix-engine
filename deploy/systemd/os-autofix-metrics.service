@@ -1,0 +1,17 @@
+[Unit]
+Description=OS-AutoFix Prometheus Metrics Exporter
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/Docs/Programming/GitHub/os-autofix-engine
+Environment="PYTHONUNBUFFERED=1"
+ExecStart=/usr/bin/python3 main.py monitor --port 9100 --server-only
+Restart=always
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
