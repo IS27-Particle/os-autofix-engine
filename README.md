@@ -64,29 +64,37 @@ flowchart TD
 4. [Installation](#-installation)
 5. [CLI Usage](#-cli-usage)
    - [Model Context Protocol (MCP) Server (`mcp`)](#1-model-context-protocol-mcp-server-mcp)
-   - [Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)](#2-monte-carlo-tree-search-trajectory-collection-mcts-collect)
-   - [Synthetic Scenario Synthesizer (`synthesize-scenario`)](#3-synthetic-scenario-synthesizer-synthesize-scenario)
-   - [Host Pre-Flight Doctor (`doctor`)](#4-host-pre-flight-doctor-doctor)
-   - [Real-Time Monitoring & Telemetry (`monitor`)](#5-real-time-monitoring--telemetry-monitor)
-   - [Environment Health Check (`test-env`)](#6-environment-health-check-test-env)
-   - [Scenario Benchmarking (`bench`)](#7-scenario-benchmarking-bench)
-   - [Dataset Collection (`collect`)](#8-dataset-collection-collect)
-   - [SFT 4-bit LoRA Training (`train-sft`)](#9-sft-4-bit-lora-training-train-sft)
-   - [GRPO Policy Optimization (`train-grpo`)](#10-grpo-policy-optimization-train-grpo)
-   - [Model Packaging & Ollama Deployment (`deploy`)](#11-model-packaging--ollama-deployment-deploy)
-   - [Continuous Self-Improvement Loop (`loop`)](#12-continuous-self-improvement-loop-loop)
-   - [Production Systemd Daemon Deployment (`deploy-daemon`)](#13-production-systemd-daemon-deployment-deploy-daemon)
-   - [Automated GitHub Repo Setup (`git-init`)](#14-automated-github-repo-setup-git-init)
+   - [Tri-Agent Specialist Swarm (`swarm`)](#2-tri-agent-specialist-swarm-swarm)
+   - [Model Arena ELO Tournament (`arena`)](#3-model-arena-elo-tournament-arena)
+   - [Open-WebUI Pipeline Bundle Export (`export-webui`)](#4-open-webui-pipeline-bundle-export-export-webui)
+   - [Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)](#5-monte-carlo-tree-search-trajectory-collection-mcts-collect)
+   - [Synthetic Scenario Synthesizer (`synthesize-scenario`)](#6-synthetic-scenario-synthesizer-synthesize-scenario)
+   - [Host Pre-Flight Doctor (`doctor`)](#7-host-pre-flight-doctor-doctor)
+   - [Real-Time Monitoring & Telemetry (`monitor`)](#8-real-time-monitoring--telemetry-monitor)
+   - [Environment Health Check (`test-env`)](#9-environment-health-check-test-env)
+   - [Scenario Benchmarking (`bench`)](#10-scenario-benchmarking-bench)
+   - [Dataset Collection (`collect`)](#11-dataset-collection-collect)
+   - [SFT 4-bit LoRA Training (`train-sft`)](#12-sft-4-bit-lora-training-train-sft)
+   - [GRPO Policy Optimization (`train-grpo`)](#13-grpo-policy-optimization-train-grpo)
+   - [Model Packaging & Ollama Deployment (`deploy`)](#14-model-packaging--ollama-deployment-deploy)
+   - [Continuous Self-Improvement Loop (`loop`)](#15-continuous-self-improvement-loop-loop)
+   - [Production Systemd Daemon Deployment (`deploy-daemon`)](#16-production-systemd-daemon-deployment-deploy-daemon)
+   - [Automated GitHub Repo Setup (`git-init`)](#17-automated-github-repo-setup-git-init)
 6. [Model Context Protocol (MCP) Integration](#-model-context-protocol-mcp-integration)
-7. [Supported Diagnostic Scenarios](#-supported-diagnostic-scenarios)
-8. [Prometheus Metrics & Grafana](#-prometheus-metrics--grafana)
-9. [Training Data Export Formats](#-training-data-export-formats)
-10. [Testing & CI](#-testing--ci)
+7. [Open-WebUI Pipeline & Tools](#-open-webui-pipeline--tools)
+8. [Model Arena & ELO Rating System](#-model-arena--elo-rating-system)
+9. [Supported Diagnostic Scenarios](#-supported-diagnostic-scenarios)
+10. [Prometheus Metrics & Grafana](#-prometheus-metrics--grafana)
+11. [Training Data Export Formats](#-training-data-export-formats)
+12. [Testing & CI](#-testing--ci)
 
 ---
 
 ## ✨ Key Features
 
+- **Tri-Agent Specialist Swarm (`Triage` $\to$ `Remediation` $\to$ `Audit`)**: Structured multi-turn state machine handoffs with read-only inspection boundaries, surgical state mutation, and automatic rollback on collateral damage.
+- **Model Arena ELO Rating System**: Paired A/B tournament testing between model checkpoints on identical cloned snapshots with standard ELO update calculations ($K=32$) and multi-tier victory scoring.
+- **Interactive Open-WebUI Pipeline & Tool Integration**: Real-time streaming pipeline filter yielding thoughts, bash commands, and diagnostics directly into `https://ai.is27.duckdns.org`.
 - **Monte Carlo Tree Search (MCTS) Trajectory Collector**: Explores OS action spaces with snapshot branching, UCT selection, loop pruning heuristics, and shortest-path extraction into `data/dataset_mcts_optimal.jsonl`.
 - **LLM-Driven Synthetic Scenario Synthesizer**: Prompts teacher models to generate novel Linux failure scenarios, dynamically compiles Python code, validates in 3-phase sandbox pre-flight checks, and registers them automatically.
 - **Model Context Protocol (MCP) Server**: Exposes sandbox creation, fault injection, command execution, and benchmark metrics over stdio / SSE to Claude Desktop, Open-WebUI, and AI agent frameworks.
@@ -183,7 +191,37 @@ python3 main.py mcp
 python3 main.py mcp --transport sse --port 8080
 ```
 
-### 2. Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)
+### 2. Tri-Agent Specialist Swarm (`swarm`)
+Executes coordinated multi-turn handoffs between read-only Triage, surgical Remediation, and collateral safety Audit agents:
+
+```bash
+python3 main.py swarm \
+  --scenario systemd_dns \
+  --max-cycles 2 \
+  --type container \
+  --model qwen2.5-coder:7b
+```
+
+### 3. Model Arena ELO Tournament (`arena`)
+Runs head-to-head A/B tournament matches between baseline and challenger models across identical sandbox snapshots with persistent ELO tracking:
+
+```bash
+python3 main.py arena \
+  --model-a qwen2.5-coder:7b \
+  --model-b os-fixer:v1 \
+  --scenarios all \
+  --rounds 2 \
+  --ratings-file reports/arena_ratings.json
+```
+
+### 4. Open-WebUI Pipeline Bundle Export (`export-webui`)
+Exports the ready-to-import Open-WebUI pipeline code and tool function calling schema:
+
+```bash
+python3 main.py export-webui --output dist/open_webui_bundle.json
+```
+
+### 5. Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)
 Explores the OS action space using snapshot-branching Monte Carlo Tree Search and extracts the optimal shortest-path resolution trajectory:
 
 ```bash
@@ -198,7 +236,7 @@ python3 main.py mcts-collect \
   --model qwen2.5-coder:7b
 ```
 
-### 3. Synthetic Scenario Synthesizer (`synthesize-scenario`)
+### 6. Synthetic Scenario Synthesizer (`synthesize-scenario`)
 Uses teacher LLMs to synthesize novel Linux diagnostic scenarios, validates them inside Incus sandboxes across 3 verification phases, and automatically registers them:
 
 ```bash
@@ -211,14 +249,14 @@ python3 main.py synthesize-scenario \
   --model qwen2.5-coder:7b
 ```
 
-### 4. Host Pre-Flight Doctor (`doctor`)
+### 7. Host Pre-Flight Doctor (`doctor`)
 Runs pre-flight diagnostics for KVM virtualization, Incus CLI/storage/bridges, and remote LLM endpoints:
 
 ```bash
 python3 main.py doctor
 ```
 
-### 5. Real-Time Monitoring & Telemetry (`monitor`)
+### 8. Real-Time Monitoring & Telemetry (`monitor`)
 Launch the live Rich terminal dashboard or start the standalone Prometheus metrics exporter:
 
 ```bash
@@ -229,14 +267,14 @@ python3 main.py monitor
 python3 main.py monitor --port 9100 --server-only
 ```
 
-### 6. Environment Health Check (`test-env`)
+### 9. Environment Health Check (`test-env`)
 Validates Incus hypervisor, KVM acceleration, Ollama / Open-WebUI connectivity, and executes a live ephemeral sandbox snapshot rollback test:
 
 ```bash
 python3 main.py test-env --type container
 ```
 
-### 7. Scenario Benchmarking (`bench`)
+### 10. Scenario Benchmarking (`bench`)
 Evaluates model performance across diagnostic fault scenarios in parallel:
 
 ```bash
@@ -248,7 +286,7 @@ python3 main.py bench \
   --type vm
 ```
 
-### 8. Dataset Collection (`collect`)
+### 11. Dataset Collection (`collect`)
 Generates exploration rollouts and exports positive trajectories for training:
 
 ```bash
@@ -261,7 +299,7 @@ python3 main.py collect \
   --output-dir data
 ```
 
-### 9. SFT 4-bit LoRA Training (`train-sft`)
+### 12. SFT 4-bit LoRA Training (`train-sft`)
 Fine-tunes base models on ShareGPT-formatted trajectory datasets with automatic GGUF quantization:
 
 ```bash
@@ -275,7 +313,7 @@ python3 main.py train-sft \
   --export-gguf
 ```
 
-### 10. GRPO Policy Optimization (`train-grpo`)
+### 13. GRPO Policy Optimization (`train-grpo`)
 Runs Group Relative Policy Optimization using multi-component reward functions:
 
 ```bash
@@ -287,7 +325,7 @@ python3 main.py train-grpo \
   --generations 4
 ```
 
-### 11. Model Packaging & Ollama Deployment (`deploy`)
+### 14. Model Packaging & Ollama Deployment (`deploy`)
 Generates Modelfiles with structured system prompts and registers new model tags with Ollama:
 
 ```bash
@@ -297,7 +335,7 @@ python3 main.py deploy \
   --ollama-url http://10.0.0.25:11434
 ```
 
-### 12. Continuous Self-Improvement Loop (`loop`)
+### 15. Continuous Self-Improvement Loop (`loop`)
 Executes an autonomous closed-loop cycle (Benchmark $\to$ Collect $\to$ Filter $\to$ Train $\to$ Deploy $\to$ Verify) with automatic rollback protection:
 
 ```bash
@@ -312,14 +350,14 @@ python3 main.py loop \
   --ollama-url http://10.0.0.25:11434
 ```
 
-### 13. Production Systemd Daemon Deployment (`deploy-daemon`)
+### 16. Production Systemd Daemon Deployment (`deploy-daemon`)
 Installs and enables the `os-autofix.service` and `os-autofix-metrics.service` unit files:
 
 ```bash
 python3 main.py deploy-daemon --systemd-dir /etc/systemd/system --enable
 ```
 
-### 14. Automated GitHub Repo Setup (`git-init`)
+### 17. Automated GitHub Repo Setup (`git-init`)
 Initializes the git repository, stages all code, creates the remote repo, and pushes initial commits:
 
 ```bash
@@ -372,6 +410,38 @@ Or manually add to `~/.config/Claude/claude_desktop_config.json`:
 
 - `report://benchmark/latest`: Latest evaluation benchmark report in Markdown.
 - `status://cluster`: Live host hardware, active sandboxes count, storage pools, and Ollama endpoint health.
+
+---
+
+## 🌐 Open-WebUI Pipeline & Tools
+
+Integrate the **os-autofix-engine** directly with Open-WebUI running at `https://ai.is27.duckdns.org` or local deployments.
+
+### 1. Export Bundle
+```bash
+python3 main.py export-webui --output dist/open_webui_bundle.json
+```
+
+### 2. Features
+- **Streaming Execution Markdown**: Streams agent thoughts, bash commands, output drawers, and terminal verification status in real-time.
+- **Valves Configuration**: Modify Ollama endpoint (`http://10.0.0.25:11434/v1`), model tags, and sandbox types (`container` / `vm`) directly from the Admin UI.
+- **Tool Calling**: Function calling schemas for sandbox control and execution inside [`integrations/open_webui/tool_def.json`](file:///Docs/Programming/GitHub/os-autofix-engine/integrations/open_webui/tool_def.json).
+
+---
+
+## ⚔️ Model Arena & ELO Rating System
+
+The **Model Arena** ([`engine/arena.py`](file:///Docs/Programming/GitHub/os-autofix-engine/engine/arena.py)) executes paired A/B tournaments between model checkpoints (e.g., baseline `qwen2.5-coder:7b` vs fine-tuned `os-fixer:v1`):
+
+- **Snapshot-Cloned Isolation**: Both models are evaluated against exact identical snapshot states.
+- **Multi-Tier Victory Criteria**:
+  1. Terminal verification success (1.0 vs 0.0).
+  2. Step count efficiency (fewer steps win).
+  3. Execution duration (lower latency wins).
+  4. Draw / Tie (0.5 vs 0.5) if performance is equivalent.
+- **Standard Logistic ELO Tracking ($K=32$)**:
+  $$E_A = \frac{1}{1 + 10^{(R_B - R_A)/400}}, \quad R_A' = R_A + K(S_A - E_A)$$
+- **Persistent Leaderboard**: Tracks rating changes across iterations in [`reports/arena_ratings.json`](file:///Docs/Programming/GitHub/os-autofix-engine/reports/arena_ratings.json).
 
 ---
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import subprocess
 import sys
@@ -975,6 +976,223 @@ def cmd_synthesize_scenario(
             )
         else:
             console.print(f"  • [red]FAILED[/red]  `{r.get('name', 'unknown')}`: {r.get('error')}")
+
+
+@app.command("swarm")
+def cmd_swarm(
+    scenario: Annotated[
+        str,
+        typer.Option("--scenario", "-s", help="Scenario name to troubleshoot"),
+    ] = "systemd_dns",
+    instance_type: Annotated[
+        str,
+        typer.Option("--type", "-t", help="'container' or 'vm'"),
+    ] = "container",
+    image: Annotated[
+        str,
+        typer.Option("--image", "-i", help="Incus image alias"),
+    ] = "images:ubuntu/24.04",
+    max_cycles: Annotated[
+        int,
+        typer.Option("--max-cycles", "-c", help="Max Triage-Remediate-Audit handoff cycles"),
+    ] = 2,
+    backend: Annotated[
+        str,
+        typer.Option("--backend", "-b", help="'ollama', 'open-webui', or 'mock'"),
+    ] = "ollama",
+    model: Annotated[
+        str,
+        typer.Option("--model", "-m", help="Inference model name"),
+    ] = "qwen2.5-coder:7b",
+    endpoint: Annotated[
+        str,
+        typer.Option("--endpoint", "-e", help="Endpoint URL"),
+    ] = "",
+    mock_llm: Annotated[
+        bool,
+        typer.Option("--mock-llm", help="Use deterministic offline mock agents"),
+    ] = False,
+    log_level: Annotated[
+        str,
+        typer.Option("--log-level", help="Log level"),
+    ] = "INFO",
+) -> None:
+    """Run the Tri-Agent specialist swarm (Triage -> Remediation -> Audit) inside Incus sandboxes."""
+    setup_logging(log_level)
+    console.print(Panel.fit("[bold cyan]OS-AutoFix Engine: Tri-Agent Specialist Swarm[/bold cyan]"))
+
+    from engine.agents.coordinator import SwarmCoordinator
+
+    cfg = get_default_config()
+    cfg.incus.instance_type = "container" if instance_type.lower() == "container" else "vm"
+    if backend:
+        cfg.llm.backend = backend  # type: ignore[assignment]
+    if model:
+        cfg.llm.model_name = model
+    if endpoint:
+        if cfg.llm.backend == "open-webui":
+            cfg.llm.open_webui_base_url = endpoint
+        else:
+            cfg.llm.ollama_base_url = endpoint
+    if mock_llm:
+        cfg.llm.mock_mode = True
+
+    target_scenario = get_scenario(scenario)
+    instance_id = f"autofix-swarm-{uuid.uuid4().hex[:6]}"
+    sandbox = IncusSandbox(
+        instance_name=instance_id,
+        image=image,
+        is_vm=(instance_type.lower() == "vm"),
+    )
+
+    coordinator = SwarmCoordinator(config=cfg, max_cycles=max_cycles)
+
+    async def _run() -> None:
+        try:
+            await sandbox.setup()
+            await target_scenario.setup(sandbox)
+            await target_scenario.inject_fault(sandbox)
+
+            res = await coordinator.run(scenario=target_scenario, sandbox=sandbox)
+            color = "green" if res.success else "red"
+            console.print(
+                f"\n[{color}]Swarm Outcome: {'APPROVED' if res.success else 'REJECTED'}[/{color}] "
+                f"| Cycles: {res.cycles_executed} | Duration: {res.duration_seconds:.2f}s"
+            )
+            if res.triage_finding:
+                console.print(
+                    f"[bold yellow]Triage Finding:[/bold yellow] {res.triage_finding.root_cause} (Daemons: {', '.join(res.triage_finding.affected_daemons)})"
+                )
+            if res.remediation_result:
+                console.print(
+                    f"[bold blue]Remediation:[/bold blue] {res.remediation_result.mutations_summary}"
+                )
+            if res.audit_report:
+                console.print(f"[bold magenta]Audit Notes:[/bold magenta] {res.audit_report.notes}")
+        finally:
+            await sandbox.cleanup()
+
+    asyncio.run(_run())
+
+
+@app.command("arena")
+def cmd_arena(
+    model_a: Annotated[
+        str,
+        typer.Option("--model-a", help="Baseline model identifier"),
+    ] = "qwen2.5-coder:7b",
+    model_b: Annotated[
+        str,
+        typer.Option("--model-b", help="Challenger model identifier"),
+    ] = "os-fixer:v1",
+    scenarios: Annotated[
+        str,
+        typer.Option("--scenarios", "-s", help="Comma-separated scenarios or 'all'"),
+    ] = "all",
+    rounds: Annotated[
+        int,
+        typer.Option("--rounds", "-r", help="Rounds per scenario"),
+    ] = 1,
+    instance_type: Annotated[
+        str,
+        typer.Option("--type", "-t", help="'container' or 'vm'"),
+    ] = "container",
+    ratings_file: Annotated[
+        str,
+        typer.Option("--ratings-file", help="Path to persistent ELO ratings JSON"),
+    ] = "reports/arena_ratings.json",
+    log_level: Annotated[
+        str,
+        typer.Option("--log-level", help="Log level"),
+    ] = "INFO",
+) -> None:
+    """Run head-to-head Model Arena ELO tournament between two model checkpoints."""
+    setup_logging(log_level)
+    console.print(
+        Panel.fit(
+            f"[bold yellow]OS-AutoFix Engine: Model Arena Tournament[/bold yellow]\n[cyan]{model_a}[/cyan] vs [magenta]{model_b}[/magenta]"
+        )
+    )
+
+    from engine.arena import ModelArena
+
+    if scenarios.lower() == "all":
+        target_scenarios = get_all_scenarios()
+    else:
+        target_scenarios = [get_scenario(n.strip()) for n in scenarios.split(",") if n.strip()]
+
+    arena = ModelArena(ratings_file=ratings_file)
+    summary = asyncio.run(
+        arena.run_tournament(
+            model_a=model_a,
+            model_b=model_b,
+            scenarios=target_scenarios,
+            rounds=rounds,
+            instance_type=instance_type,
+        )
+    )
+
+    table = Table(title="Arena Match Results", show_header=True, header_style="bold cyan")
+    table.add_column("Scenario", style="bold")
+    table.add_column("Round", justify="center")
+    table.add_column("Winner", style="green")
+    table.add_column("Score (A vs B)", justify="center")
+    table.add_column("Steps (A vs B)", justify="center")
+    table.add_column("Reason", style="dim")
+
+    for m in summary.matches:
+        table.add_row(
+            m.scenario_name,
+            str(m.round_idx),
+            m.winner,
+            f"{m.score_a} - {m.score_b}",
+            f"{m.traj_a_steps} vs {m.traj_b_steps}",
+            m.reason,
+        )
+
+    console.print(table)
+    console.print(
+        f"\n[bold green]Final ELO Ratings:[/bold green]\n"
+        f"  • {model_a}: [cyan]{summary.final_elo_a:.1f}[/cyan] (Δ {summary.final_elo_a - summary.initial_elo_a:+.1f})\n"
+        f"  • {model_b}: [magenta]{summary.final_elo_b:.1f}[/magenta] (Δ {summary.final_elo_b - summary.initial_elo_b:+.1f})\n"
+        f"Ratings saved to [cyan]{ratings_file}[/cyan]"
+    )
+
+
+@app.command("export-webui")
+def cmd_export_webui(
+    output: Annotated[
+        str,
+        typer.Option("--output", "-o", help="Target path for Open-WebUI bundle JSON"),
+    ] = "dist/open_webui_bundle.json",
+) -> None:
+    """Export complete Open-WebUI Tool and Pipeline bundle ready for UI import."""
+    out_path = Path(output)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+
+    tool_def_path = Path("integrations/open_webui/tool_def.json")
+    tool_def = (
+        json.loads(tool_def_path.read_text(encoding="utf-8")) if tool_def_path.exists() else {}
+    )
+
+    pipeline_code = Path("integrations/open_webui/pipeline.py").read_text(encoding="utf-8")
+
+    bundle = {
+        "title": "OS-AutoFix Engine Open-WebUI Integration",
+        "version": "0.4.0",
+        "open_webui_target": "https://ai.is27.duckdns.org",
+        "tool": tool_def,
+        "pipeline": {
+            "id": "os_autofix_pipeline",
+            "name": "OS-AutoFix Engine Pipeline",
+            "code": pipeline_code,
+        },
+    }
+
+    out_path.write_text(json.dumps(bundle, indent=2), encoding="utf-8")
+    console.print(
+        f"[bold green]Successfully exported Open-WebUI bundle to:[/bold green] [cyan]{out_path}[/cyan]"
+    )
 
 
 @app.command("mcp")

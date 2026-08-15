@@ -1,0 +1,42 @@
+{
+  "id": "os_autofix_tools",
+  "name": "OS-AutoFix Engine Tools",
+  "meta": {
+    "description": "Autonomous OS troubleshooting, Incus VM sandbox management, and fault remediation tools",
+    "manifest": {
+      "title": "OS-AutoFix Engine Tools",
+      "author": "Antigravity Engineering",
+      "author_url": "https://github.com/IS27-Particle/os-autofix-engine",
+      "version": "0.4.0"
+    }
+  },
+  "content": "class Tools:\n    \"\"\"OS-AutoFix Sandbox and Diagnostic Tools for Open-WebUI.\"\"\"\n\n    def list_scenarios(self) -> str:\n        \"\"\"Return available OS failure scenarios and descriptions.\"\"\"\n        from scenarios.registry import get_all_scenarios\n        import json\n        return json.dumps([{\"name\": s.name, \"description\": s.description} for s in get_all_scenarios()])\n\n    def run_command(self, instance_id: str, command: str) -> str:\n        \"\"\"Execute command in target sandbox with timeout protection.\"\"\"\n        import subprocess\n        res = subprocess.run([\"incus\", \"exec\", instance_id, \"--\", \"bash\", \"-c\", command], capture_output=True, text=True, timeout=15)\n        return res.stdout + res.stderr\n",
+  "specs": [
+    {
+      "name": "list_scenarios",
+      "description": "List all 7+ available operating system diagnostic fault scenarios",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "run_command",
+      "description": "Execute a bash command in a running Incus sandbox instance",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "instance_id": {
+            "type": "string",
+            "description": "Incus instance identifier"
+          },
+          "command": {
+            "type": "string",
+            "description": "Bash command to execute"
+          }
+        },
+        "required": ["instance_id", "command"]
+      }
+    }
+  ]
+}
