@@ -63,41 +63,50 @@ flowchart TD
 3. [Endpoint Configuration](#-endpoint-configuration)
 4. [Installation](#-installation)
 5. [CLI Usage](#-cli-usage)
-   - [Kernel Syscall Security Auditor (`audit-security`)](#1-kernel-syscall-security-auditor-audit-security)
-   - [Autonomous Chaos Engineering Daemon (`chaos`)](#2-autonomous-chaos-engineering-daemon-chaos)
-   - [Multi-Node Distributed Topology Benchmark (`bench-distributed`)](#3-multi-node-distributed-topology-benchmark-bench-distributed)
-   - [Model Context Protocol (MCP) Server (`mcp`)](#4-model-context-protocol-mcp-server-mcp)
-   - [Tri-Agent Specialist Swarm (`swarm`)](#5-tri-agent-specialist-swarm-swarm)
-   - [Model Arena ELO Tournament (`arena`)](#6-model-arena-elo-tournament-arena)
-   - [Open-WebUI Pipeline Bundle Export (`export-webui`)](#7-open-webui-pipeline-bundle-export-export-webui)
-   - [Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)](#8-monte-carlo-tree-search-trajectory-collection-mcts-collect)
-   - [Synthetic Scenario Synthesizer (`synthesize-scenario`)](#9-synthetic-scenario-synthesizer-synthesize-scenario)
-   - [Host Pre-Flight Doctor (`doctor`)](#10-host-pre-flight-doctor-doctor)
-   - [Real-Time Monitoring & Telemetry (`monitor`)](#11-real-time-monitoring--telemetry-monitor)
-   - [Environment Health Check (`test-env`)](#12-environment-health-check-test-env)
-   - [Scenario Benchmarking (`bench`)](#13-scenario-benchmarking-bench)
-   - [Dataset Collection (`collect`)](#14-dataset-collection-collect)
-   - [SFT 4-bit LoRA Training (`train-sft`)](#15-sft-4-bit-lora-training-train-sft)
-   - [GRPO Policy Optimization (`train-grpo`)](#16-grpo-policy-optimization-train-grpo)
-   - [Model Packaging & Ollama Deployment (`deploy`)](#17-model-packaging--ollama-deployment-deploy)
-   - [Continuous Self-Improvement Loop (`loop`)](#18-continuous-self-improvement-loop-loop)
-   - [Production Systemd Daemon Deployment (`deploy-daemon`)](#19-production-systemd-daemon-deployment-deploy-daemon)
-   - [Automated GitHub Repo Setup (`git-init`)](#20-automated-github-repo-setup-git-init)
-6. [Kernel Syscall Security Auditor & eBPF Inspection](#-kernel-syscall-security-auditor--ebpf-inspection)
-7. [Multi-Node Distributed Scenarios](#-multi-node-distributed-scenarios)
-8. [Autonomous Chaos Engineering Daemon](#-autonomous-chaos-engineering-daemon)
-9. [Model Context Protocol (MCP) Integration](#-model-context-protocol-mcp-integration)
-10. [Open-WebUI Pipeline & Tools](#-open-webui-pipeline--tools)
-11. [Model Arena & ELO Rating System](#-model-arena--elo-rating-system)
-12. [Supported Diagnostic Scenarios](#-supported-diagnostic-scenarios)
-13. [Prometheus Metrics & Grafana](#-prometheus-metrics--grafana)
-14. [Training Data Export Formats](#-training-data-export-formats)
-15. [Testing & CI](#-testing--ci)
+   - [Documentation & Runbook Indexer (`index-docs`)](#1-documentation--runbook-indexer-index-docs)
+   - [Knowledge Base Query (`query-knowledge`)](#2-knowledge-base-query-query-knowledge)
+   - [Host Self-Healing Watchdog Daemon (`watchdog`)](#3-host-self-healing-watchdog-daemon-watchdog)
+   - [Kernel Syscall Security Auditor (`audit-security`)](#4-kernel-syscall-security-auditor-audit-security)
+   - [Autonomous Chaos Engineering Daemon (`chaos`)](#5-autonomous-chaos-engineering-daemon-chaos)
+   - [Multi-Node Distributed Topology Benchmark (`bench-distributed`)](#6-multi-node-distributed-topology-benchmark-bench-distributed)
+   - [Model Context Protocol (MCP) Server (`mcp`)](#7-model-context-protocol-mcp-server-mcp)
+   - [Tri-Agent Specialist Swarm (`swarm`)](#8-tri-agent-specialist-swarm-swarm)
+   - [Model Arena ELO Tournament (`arena`)](#9-model-arena-elo-tournament-arena)
+   - [Open-WebUI Pipeline Bundle Export (`export-webui`)](#10-open-webui-pipeline-bundle-export-export-webui)
+   - [Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)](#11-monte-carlo-tree-search-trajectory-collection-mcts-collect)
+   - [Synthetic Scenario Synthesizer (`synthesize-scenario`)](#12-synthetic-scenario-synthesizer-synthesize-scenario)
+   - [Host Pre-Flight Doctor (`doctor`)](#13-host-pre-flight-doctor-doctor)
+   - [Real-Time Monitoring & Telemetry (`monitor`)](#14-real-time-monitoring--telemetry-monitor)
+   - [Environment Health Check (`test-env`)](#15-environment-health-check-test-env)
+   - [Scenario Benchmarking (`bench`)](#16-scenario-benchmarking-bench)
+   - [Dataset Collection (`collect`)](#17-dataset-collection-collect)
+   - [SFT 4-bit LoRA Training (`train-sft`)](#18-sft-4-bit-lora-training-train-sft)
+   - [GRPO Policy Optimization (`train-grpo`)](#19-grpo-policy-optimization-train-grpo)
+   - [Model Packaging & Ollama Deployment (`deploy`)](#20-model-packaging--ollama-deployment-deploy)
+   - [Continuous Self-Improvement Loop (`loop`)](#21-continuous-self-improvement-loop-loop)
+   - [Production Systemd Daemon Deployment (`deploy-daemon`)](#22-production-systemd-daemon-deployment-deploy-daemon)
+   - [Automated GitHub Repo Setup (`git-init`)](#23-automated-github-repo-setup-git-init)
+6. [Offline Hybrid Documentation & Runbook Retriever](#-offline-hybrid-documentation--runbook-retriever)
+7. [Human-in-the-Loop Interactive Webhook Approval Gate](#-human-in-the-loop-interactive-webhook-approval-gate)
+8. [Host Self-Healing Watchdog Daemon](#-host-self-healing-watchdog-daemon)
+9. [Kernel Syscall Security Auditor & eBPF Inspection](#-kernel-syscall-security-auditor--ebpf-inspection)
+10. [Multi-Node Distributed Scenarios](#-multi-node-distributed-scenarios)
+11. [Autonomous Chaos Engineering Daemon](#-autonomous-chaos-engineering-daemon)
+12. [Model Context Protocol (MCP) Integration](#-model-context-protocol-mcp-integration)
+13. [Open-WebUI Pipeline & Tools](#-open-webui-pipeline--tools)
+14. [Model Arena & ELO Rating System](#-model-arena--elo-rating-system)
+15. [Supported Diagnostic Scenarios](#-supported-diagnostic-scenarios)
+16. [Prometheus Metrics & Grafana](#-prometheus-metrics--grafana)
+17. [Training Data Export Formats](#-training-data-export-formats)
+18. [Testing & CI](#-testing--ci)
 
 ---
 
 ## ✨ Key Features
 
+- **Offline Hybrid Documentation & Runbook Retriever**: Embedded BM25 + vector search engine parsing Linux manpages and markdown runbooks for systemd, ZFS, networking, Docker, and PAM authentication.
+- **Human-in-the-Loop Interactive Webhook Approval Gate**: Intercepts high-blast-radius actions (safety score 0.70 - 0.85) with actionable Discord/Slack notifications and callback approvals.
+- **Host Self-Healing Watchdog Daemon**: Continuously analyzes `journalctl` log streams, detects anomalies, and validates remediation inside ephemeral Incus shadow containers before live application.
 - **Kernel-Level Syscall Security Auditor**: Intercepts `execve`, `unlinkat`, `chmod`, `connect`, `init_module` to catch recursive wiping (`rm -rf /`), reverse shells, and credential theft with automatic rollback if safety score drops below 0.70.
 - **Multi-Node Distributed Topology Scenarios**: Orchestrates multi-instance Incus overlay topologies (`wireguard_mesh`, `etcd_split_brain`, `reverse_proxy_ha`) with automated cross-node fault injection and raft quorum verifiers.
 - **Autonomous Chaos Engineering Daemon**: Continuously injects Poisson-distributed faults across a fleet of canary sandboxes, measuring Mean Time to Resolution (MTTR) and safety score distributions in real-time.
@@ -187,7 +196,32 @@ pip install -e .
 
 ## 💻 CLI Usage
 
-### 1. Kernel Syscall Security Auditor (`audit-security`)
+### 1. Documentation & Runbook Indexer (`index-docs`)
+Indexes offline Linux troubleshooting runbooks and manpage documentation into the hybrid search engine:
+
+```bash
+python3 main.py index-docs --runbooks-dir knowledge/runbooks --output reports/knowledge_index.json
+```
+
+### 2. Knowledge Base Query (`query-knowledge`)
+Queries the offline hybrid BM25 / vector knowledge base for diagnostic runbooks:
+
+```bash
+python3 main.py query-knowledge --query "DNS resolution failure in systemd" --top-k 3
+```
+
+### 3. Host Self-Healing Watchdog Daemon (`watchdog`)
+Runs the proactive journal stream watchdog with shadow container dry-run verification:
+
+```bash
+# Run in safe dry-run mode (validates fixes in Incus without modifying host)
+python3 main.py watchdog --dry-run --min-safety-score 0.85
+
+# Run in live mode (applies validated fixes to host)
+python3 main.py watchdog --live --min-safety-score 0.90
+```
+
+### 4. Kernel Syscall Security Auditor (`audit-security`)
 Inspects arbitrary commands or remediation scripts for destructive anti-patterns, reverse shells, and credential theft:
 
 ```bash
@@ -198,7 +232,7 @@ python3 main.py audit-security --command "rm -rf /"
 python3 main.py audit-security --command "systemctl restart systemd-resolved"
 ```
 
-### 2. Autonomous Chaos Engineering Daemon (`chaos`)
+### 5. Autonomous Chaos Engineering Daemon (`chaos`)
 Runs continuous randomized Poisson-distributed fault injection experiments across a fleet of canary sandboxes:
 
 ```bash
@@ -209,14 +243,14 @@ python3 main.py chaos \
   --type container
 ```
 
-### 3. Multi-Node Distributed Topology Benchmark (`bench-distributed`)
+### 6. Multi-Node Distributed Topology Benchmark (`bench-distributed`)
 Runs multi-node cluster verifications across WireGuard mesh, etcd Raft consensus, and Keepalived HA reverse proxies:
 
 ```bash
 python3 main.py bench-distributed --scenario all --type container
 ```
 
-### 4. Model Context Protocol (MCP) Server (`mcp`)
+### 7. Model Context Protocol (MCP) Server (`mcp`)
 Starts the MCP server over standard I/O (stdio) or Server-Sent Events (SSE) for Claude Desktop, Open-WebUI, or external AI agents:
 
 ```bash
@@ -227,7 +261,7 @@ python3 main.py mcp
 python3 main.py mcp --transport sse --port 8080
 ```
 
-### 5. Tri-Agent Specialist Swarm (`swarm`)
+### 8. Tri-Agent Specialist Swarm (`swarm`)
 Executes coordinated multi-turn handoffs between read-only Triage, surgical Remediation, and collateral safety Audit agents:
 
 ```bash
@@ -238,7 +272,7 @@ python3 main.py swarm \
   --model qwen2.5-coder:7b
 ```
 
-### 6. Model Arena ELO Tournament (`arena`)
+### 9. Model Arena ELO Tournament (`arena`)
 Runs head-to-head A/B tournament matches between baseline and challenger models across identical sandbox snapshots with persistent ELO tracking:
 
 ```bash
@@ -250,14 +284,14 @@ python3 main.py arena \
   --ratings-file reports/arena_ratings.json
 ```
 
-### 7. Open-WebUI Pipeline Bundle Export (`export-webui`)
+### 10. Open-WebUI Pipeline Bundle Export (`export-webui`)
 Exports the ready-to-import Open-WebUI pipeline code and tool function calling schema:
 
 ```bash
 python3 main.py export-webui --output dist/open_webui_bundle.json
 ```
 
-### 8. Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)
+### 11. Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)
 Explores the OS action space using snapshot-branching Monte Carlo Tree Search and extracts the optimal shortest-path resolution trajectory:
 
 ```bash
@@ -272,7 +306,7 @@ python3 main.py mcts-collect \
   --model qwen2.5-coder:7b
 ```
 
-### 9. Synthetic Scenario Synthesizer (`synthesize-scenario`)
+### 12. Synthetic Scenario Synthesizer (`synthesize-scenario`)
 Uses teacher LLMs to synthesize novel Linux diagnostic scenarios, validates them inside Incus sandboxes across 3 verification phases, and automatically registers them:
 
 ```bash
@@ -285,14 +319,14 @@ python3 main.py synthesize-scenario \
   --model qwen2.5-coder:7b
 ```
 
-### 10. Host Pre-Flight Doctor (`doctor`)
+### 13. Host Pre-Flight Doctor (`doctor`)
 Runs pre-flight diagnostics for KVM virtualization, Incus CLI/storage/bridges, and remote LLM endpoints:
 
 ```bash
 python3 main.py doctor
 ```
 
-### 11. Real-Time Monitoring & Telemetry (`monitor`)
+### 14. Real-Time Monitoring & Telemetry (`monitor`)
 Launch the live Rich terminal dashboard or start the standalone Prometheus metrics exporter:
 
 ```bash
@@ -303,14 +337,14 @@ python3 main.py monitor
 python3 main.py monitor --port 9100 --server-only
 ```
 
-### 12. Environment Health Check (`test-env`)
+### 15. Environment Health Check (`test-env`)
 Validates Incus hypervisor, KVM acceleration, Ollama / Open-WebUI connectivity, and executes a live ephemeral sandbox snapshot rollback test:
 
 ```bash
 python3 main.py test-env --type container
 ```
 
-### 13. Scenario Benchmarking (`bench`)
+### 16. Scenario Benchmarking (`bench`)
 Evaluates model performance across diagnostic fault scenarios in parallel:
 
 ```bash
@@ -322,7 +356,7 @@ python3 main.py bench \
   --type vm
 ```
 
-### 14. Dataset Collection (`collect`)
+### 17. Dataset Collection (`collect`)
 Generates exploration rollouts and exports positive trajectories for training:
 
 ```bash
@@ -335,7 +369,7 @@ python3 main.py collect \
   --output-dir data
 ```
 
-### 15. SFT 4-bit LoRA Training (`train-sft`)
+### 18. SFT 4-bit LoRA Training (`train-sft`)
 Fine-tunes base models on ShareGPT-formatted trajectory datasets with automatic GGUF quantization:
 
 ```bash
@@ -349,7 +383,7 @@ python3 main.py train-sft \
   --export-gguf
 ```
 
-### 16. GRPO Policy Optimization (`train-grpo`)
+### 19. GRPO Policy Optimization (`train-grpo`)
 Runs Group Relative Policy Optimization using multi-component reward functions:
 
 ```bash
@@ -361,7 +395,7 @@ python3 main.py train-grpo \
   --generations 4
 ```
 
-### 17. Model Packaging & Ollama Deployment (`deploy`)
+### 20. Model Packaging & Ollama Deployment (`deploy`)
 Generates Modelfiles with structured system prompts and registers new model tags with Ollama:
 
 ```bash
@@ -371,7 +405,7 @@ python3 main.py deploy \
   --ollama-url http://10.0.0.25:11434
 ```
 
-### 18. Continuous Self-Improvement Loop (`loop`)
+### 21. Continuous Self-Improvement Loop (`loop`)
 Executes an autonomous closed-loop cycle (Benchmark $\to$ Collect $\to$ Filter $\to$ Train $\to$ Deploy $\to$ Verify) with automatic rollback protection:
 
 ```bash
@@ -386,19 +420,53 @@ python3 main.py loop \
   --ollama-url http://10.0.0.25:11434
 ```
 
-### 19. Production Systemd Daemon Deployment (`deploy-daemon`)
+### 22. Production Systemd Daemon Deployment (`deploy-daemon`)
 Installs and enables the `os-autofix.service` and `os-autofix-metrics.service` unit files:
 
 ```bash
 python3 main.py deploy-daemon --systemd-dir /etc/systemd/system --enable
 ```
 
-### 20. Automated GitHub Repo Setup (`git-init`)
+### 23. Automated GitHub Repo Setup (`git-init`)
 Initializes the git repository, stages all code, creates the remote repo, and pushes initial commits:
 
 ```bash
 python3 main.py git-init --name os-autofix-engine --public
 ```
+
+---
+
+## 📚 Offline Hybrid Documentation & Runbook Retriever
+
+The **Hybrid Retriever** ([`knowledge/retriever.py`](file:///Docs/Programming/GitHub/os-autofix-engine/knowledge/retriever.py)) embeds local Linux troubleshooting runbooks and manpage lookups for zero-network environments:
+
+- **Hybrid Search Engine**: BM25 keyword matching + normalized term vector similarity with title and section boost.
+- **Pre-Populated Troubleshooting Runbooks**:
+  - `knowledge/runbooks/systemd_dns.md`: DNS resolution, stub listener symlinks, and fallback configuration.
+  - `knowledge/runbooks/zfs_storage.md`: Storage pool recovery, dataset mounting, and canmount properties.
+  - `knowledge/runbooks/networking_routing.md`: Kernel routing tables, gateway recovery, and Netplan.
+  - `knowledge/runbooks/docker_daemon.md`: Socket permissions, daemon JSON syntax, and service recovery.
+  - `knowledge/runbooks/pam_security.md`: Authentication lockout clearance and PAM configuration.
+
+---
+
+## 🚦 Human-in-the-Loop Interactive Webhook Approval Gate
+
+The **Approval Gate** ([`security/approval_gate.py`](file:///Docs/Programming/GitHub/os-autofix-engine/security/approval_gate.py)) manages human authorization for high-blast-radius actions:
+
+- **Review Trigger Window**: Intercepts actions with safety scores between **0.70** and **0.85**.
+- **Actionable Notifications**: Dispatches Discord/Slack webhook embeds containing proposed command diffs, blast radius, and approval/rejection callback endpoints.
+- **State Machine**: Supports `PENDING`, `APPROVED`, `REJECTED`, and `TIMED_OUT` (default 60s timeout automatically commanding rollback).
+
+---
+
+## 🐕 Host Self-Healing Watchdog Daemon
+
+The **Host Watchdog Daemon** ([`engine/host_watchdog.py`](file:///Docs/Programming/GitHub/os-autofix-engine/engine/host_watchdog.py)) provides proactive anomaly detection and shadow container dry-run remediation:
+
+- **Journal Stream Monitoring**: Continuously parses systemd logs for failed services, OOM kills, network interface drops, or locked package managers.
+- **Shadow Dry-Run Verification**: Spawns an isolated Incus container, reproduces the fault, and proves the fix works *before* applying changes to the live host.
+- **Safety Enforcement**: Rejects fixes if the evaluated security score is below `--min-safety-score` (default 0.85).
 
 ---
 

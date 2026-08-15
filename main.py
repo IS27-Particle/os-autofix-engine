@@ -1393,5 +1393,112 @@ def cmd_audit_security(
             )
 
 
+@app.command("index-docs")
+def cmd_index_docs(
+    runbooks_dir: Annotated[
+        str,
+        typer.Option(
+            "--runbooks-dir", help="Directory containing markdown troubleshooting runbooks"
+        ),
+    ] = "knowledge/runbooks",
+    output: Annotated[
+        str,
+        typer.Option("--output", "-o", help="Target path for serialized knowledge index JSON"),
+    ] = "reports/knowledge_index.json",
+) -> None:
+    """Index offline Linux troubleshooting runbooks and manpage documentation into the hybrid search engine."""
+    console.print(
+        Panel.fit("[bold cyan]OS-AutoFix Engine: Documentation & Runbook Indexer[/bold cyan]")
+    )
+
+    from knowledge.retriever import HybridRetriever
+
+    retriever = HybridRetriever(runbooks_dir=runbooks_dir)
+    count = retriever.index_all()
+    retriever.export_index_json(output)
+
+    console.print(
+        f"[bold green]Successfully indexed {count} document chunks into:[/bold green] [cyan]{output}[/cyan]"
+    )
+
+
+@app.command("query-knowledge")
+def cmd_query_knowledge(
+    query: Annotated[
+        str,
+        typer.Option("--query", "-q", help="Troubleshooting search query"),
+    ] = "systemd DNS resolution failure",
+    top_k: Annotated[
+        int,
+        typer.Option("--top-k", "-k", help="Number of chunks to return"),
+    ] = 3,
+) -> None:
+    """Query the offline hybrid BM25 / vector knowledge base for diagnostic runbooks."""
+    console.print(Panel.fit(f"[bold yellow]Knowledge Query: '{query}'[/bold yellow]"))
+
+    from knowledge.retriever import GLOBAL_RETRIEVER
+
+    results = GLOBAL_RETRIEVER.consult_runbook(query, top_k=top_k)
+
+    if not results:
+        console.print("[yellow]No relevant runbook sections found for this query.[/yellow]")
+        return
+
+    table = Table(
+        title="Retrieved Troubleshooting Runbooks", show_header=True, header_style="bold cyan"
+    )
+    table.add_column("Score", justify="center", style="bold green")
+    table.add_column("Runbook Title", style="cyan")
+    table.add_column("Section", style="yellow")
+    table.add_column("Snippet Preview", style="white")
+
+    for c in results:
+        table.add_row(
+            f"{c.score:.2f}",
+            c.title,
+            c.section,
+            c.content[:120].replace("\n", " ") + "...",
+        )
+
+    console.print(table)
+
+
+@app.command("watchdog")
+def cmd_watchdog(
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run/--live", help="Simulate fixes in shadow containers without applying to host"
+        ),
+    ] = True,
+    min_safety_score: Annotated[
+        float,
+        typer.Option(
+            "--min-safety-score", help="Minimum required safety score to approve remediation"
+        ),
+    ] = 0.85,
+    log_level: Annotated[
+        str,
+        typer.Option("--log-level", help="Log level"),
+    ] = "INFO",
+) -> None:
+    """Run host self-healing watchdog monitoring journalctl with shadow container dry-run verification."""
+    setup_logging(log_level)
+    console.print(
+        Panel.fit(
+            f"[bold red]OS-AutoFix Engine: Host Self-Healing Watchdog ({'DRY-RUN' if dry_run else 'LIVE'} MODE)[/bold red]"
+        )
+    )
+
+    from engine.host_watchdog import HostWatchdogDaemon
+
+    daemon = HostWatchdogDaemon(
+        dry_run=dry_run,
+        min_safety_score=min_safety_score,
+    )
+
+    asyncio.run(daemon.run(max_iterations=5))
+
+
 if __name__ == "__main__":
     app()
