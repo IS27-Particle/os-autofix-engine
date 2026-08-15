@@ -1500,5 +1500,134 @@ def cmd_watchdog(
     asyncio.run(daemon.run(max_iterations=5))
 
 
+@app.command("cluster-node")
+def cmd_cluster_node(
+    node_id: Annotated[
+        str,
+        typer.Option("--node-id", "-n", help="Unique identifier for this federated cluster node"),
+    ] = "node-1",
+    peers: Annotated[
+        str,
+        typer.Option("--peers", "-p", help="Comma-separated list of peer node IDs"),
+    ] = "",
+    bind_addr: Annotated[
+        str,
+        typer.Option("--bind-addr", "-b", help="Bind IP address for Raft RPC"),
+    ] = "0.0.0.0",
+    raft_port: Annotated[
+        int,
+        typer.Option("--raft-port", help="Port for Raft RPC communication"),
+    ] = 9200,
+    log_level: Annotated[
+        str,
+        typer.Option("--log-level", help="Log level"),
+    ] = "INFO",
+) -> None:
+    """Start an autonomous federated cluster node with distributed Raft consensus and lock management."""
+    setup_logging(log_level)
+    console.print(
+        Panel.fit(f"[bold green]OS-AutoFix Engine: Federated Cluster Node '{node_id}'[/bold green]")
+    )
+
+    from engine.federation.cluster_raft import ClusterRaftNode
+
+    peer_list = [p.strip() for p in peers.split(",") if p.strip()]
+    node = ClusterRaftNode(node_id=node_id, peers=peer_list)
+
+    console.print(f"Node ID:   [bold cyan]{node.node_id}[/bold cyan]")
+    console.print(f"Peers:     [yellow]{node.peers or 'Standalone mode'}[/yellow]")
+    console.print(f"Listening: [magenta]{bind_addr}:{raft_port}[/magenta]\n")
+
+    asyncio.run(node.run(max_ticks=5))
+
+
+@app.command("net-chaos")
+def cmd_net_chaos(
+    instance: Annotated[
+        str,
+        typer.Option("--instance", "-i", help="Target Incus container/VM instance name"),
+    ] = "canary-net-1",
+    interface: Annotated[
+        str,
+        typer.Option("--interface", help="Target network interface"),
+    ] = "eth0",
+    latency_ms: Annotated[
+        float,
+        typer.Option("--latency-ms", "-l", help="Packet delay latency in milliseconds"),
+    ] = 100.0,
+    jitter_ms: Annotated[
+        float,
+        typer.Option("--jitter-ms", help="Packet delay jitter in milliseconds"),
+    ] = 10.0,
+    drop_rate: Annotated[
+        float,
+        typer.Option("--drop-rate", "-d", help="Packet drop fraction (0.0 to 1.0)"),
+    ] = 0.15,
+    duration_sec: Annotated[
+        float,
+        typer.Option("--duration-sec", help="Chaos experiment duration before auto-teardown"),
+    ] = 5.0,
+) -> None:
+    """Inject dynamic kernel-level eBPF / TC Traffic Control network packet faults into an instance."""
+    console.print(
+        Panel.fit(
+            f"[bold red]OS-AutoFix Engine: eBPF / TC Network Chaos Injector on '{instance}'[/bold red]"
+        )
+    )
+
+    from sandbox.incus_sandbox import IncusSandbox
+    from security.ebpf_network_chaos import EbpfNetworkChaos
+
+    sb = IncusSandbox(instance_name=instance)
+    chaos = EbpfNetworkChaos(sandbox=sb, interface=interface)
+
+    async def _run() -> None:
+        console.print(f"Interface:    [cyan]{interface}[/cyan]")
+        console.print(f"Latency:      [yellow]{latency_ms}ms (±{jitter_ms}ms)[/yellow]")
+        console.print(f"Drop Rate:    [red]{drop_rate * 100:.1f}%[/red]")
+        console.print(f"Duration:     [magenta]{duration_sec}s[/magenta]\n")
+
+        await chaos.inject_fault(
+            latency_ms=latency_ms,
+            jitter_ms=jitter_ms,
+            drop_rate=drop_rate,
+            interface=interface,
+        )
+        console.print("[green]eBPF / TC rules active. Waiting experiment duration...[/green]")
+        await asyncio.sleep(duration_sec)
+        await chaos.teardown(interface=interface)
+        console.print(
+            "[bold green]Experiment completed. eBPF / TC rules cleaned up successfully.[/bold green]"
+        )
+
+    asyncio.run(_run())
+
+
+@app.command("cluster-status")
+def cmd_cluster_status() -> None:
+    """Display the active cluster consensus leader, health, and distributed locks."""
+    console.print(Panel.fit("[bold cyan]OS-AutoFix Engine: Cluster Consensus Status[/bold cyan]"))
+
+    from engine.federation.cluster_raft import ClusterRaftNode
+
+    node = ClusterRaftNode(node_id="local-client", peers=["node-1", "node-2", "node-3"])
+    node.acquire_lock("lock:topology:etcd_split_brain", ttl_seconds=45.0)
+
+    status = node.get_cluster_status()
+
+    table = Table(title="Cluster Federation Overview", show_header=True, header_style="bold cyan")
+    table.add_column("Property", style="bold")
+    table.add_column("Value", style="yellow")
+
+    table.add_row("Node ID", status["node_id"])
+    table.add_row("Consensus Role", status["role"])
+    table.add_row("Current Term", str(status["term"]))
+    table.add_row("Cluster Leader", status["leader_id"] or "Electing / Standalone")
+    table.add_row("Configured Peers", str(status["peer_count"]))
+    table.add_row("Active Distributed Locks", str(status["active_locks_count"]))
+
+    console.print(table)
+
+
 if __name__ == "__main__":
     app()

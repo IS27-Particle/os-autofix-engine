@@ -63,47 +63,56 @@ flowchart TD
 3. [Endpoint Configuration](#-endpoint-configuration)
 4. [Installation](#-installation)
 5. [CLI Usage](#-cli-usage)
-   - [Documentation & Runbook Indexer (`index-docs`)](#1-documentation--runbook-indexer-index-docs)
-   - [Knowledge Base Query (`query-knowledge`)](#2-knowledge-base-query-query-knowledge)
-   - [Host Self-Healing Watchdog Daemon (`watchdog`)](#3-host-self-healing-watchdog-daemon-watchdog)
-   - [Kernel Syscall Security Auditor (`audit-security`)](#4-kernel-syscall-security-auditor-audit-security)
-   - [Autonomous Chaos Engineering Daemon (`chaos`)](#5-autonomous-chaos-engineering-daemon-chaos)
-   - [Multi-Node Distributed Topology Benchmark (`bench-distributed`)](#6-multi-node-distributed-topology-benchmark-bench-distributed)
-   - [Model Context Protocol (MCP) Server (`mcp`)](#7-model-context-protocol-mcp-server-mcp)
-   - [Tri-Agent Specialist Swarm (`swarm`)](#8-tri-agent-specialist-swarm-swarm)
-   - [Model Arena ELO Tournament (`arena`)](#9-model-arena-elo-tournament-arena)
-   - [Open-WebUI Pipeline Bundle Export (`export-webui`)](#10-open-webui-pipeline-bundle-export-export-webui)
-   - [Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)](#11-monte-carlo-tree-search-trajectory-collection-mcts-collect)
-   - [Synthetic Scenario Synthesizer (`synthesize-scenario`)](#12-synthetic-scenario-synthesizer-synthesize-scenario)
-   - [Host Pre-Flight Doctor (`doctor`)](#13-host-pre-flight-doctor-doctor)
-   - [Real-Time Monitoring & Telemetry (`monitor`)](#14-real-time-monitoring--telemetry-monitor)
-   - [Environment Health Check (`test-env`)](#15-environment-health-check-test-env)
-   - [Scenario Benchmarking (`bench`)](#16-scenario-benchmarking-bench)
-   - [Dataset Collection (`collect`)](#17-dataset-collection-collect)
-   - [SFT 4-bit LoRA Training (`train-sft`)](#18-sft-4-bit-lora-training-train-sft)
-   - [GRPO Policy Optimization (`train-grpo`)](#19-grpo-policy-optimization-train-grpo)
-   - [Model Packaging & Ollama Deployment (`deploy`)](#20-model-packaging--ollama-deployment-deploy)
-   - [Continuous Self-Improvement Loop (`loop`)](#21-continuous-self-improvement-loop-loop)
-   - [Production Systemd Daemon Deployment (`deploy-daemon`)](#22-production-systemd-daemon-deployment-deploy-daemon)
-   - [Automated GitHub Repo Setup (`git-init`)](#23-automated-github-repo-setup-git-init)
-6. [Offline Hybrid Documentation & Runbook Retriever](#-offline-hybrid-documentation--runbook-retriever)
-7. [Human-in-the-Loop Interactive Webhook Approval Gate](#-human-in-the-loop-interactive-webhook-approval-gate)
-8. [Host Self-Healing Watchdog Daemon](#-host-self-healing-watchdog-daemon)
-9. [Kernel Syscall Security Auditor & eBPF Inspection](#-kernel-syscall-security-auditor--ebpf-inspection)
-10. [Multi-Node Distributed Scenarios](#-multi-node-distributed-scenarios)
-11. [Autonomous Chaos Engineering Daemon](#-autonomous-chaos-engineering-daemon)
-12. [Model Context Protocol (MCP) Integration](#-model-context-protocol-mcp-integration)
-13. [Open-WebUI Pipeline & Tools](#-open-webui-pipeline--tools)
-14. [Model Arena & ELO Rating System](#-model-arena--elo-rating-system)
-15. [Supported Diagnostic Scenarios](#-supported-diagnostic-scenarios)
-16. [Prometheus Metrics & Grafana](#-prometheus-metrics--grafana)
-17. [Training Data Export Formats](#-training-data-export-formats)
-18. [Testing & CI](#-testing--ci)
+   - [Federated Cluster Node (`cluster-node`)](#1-federated-cluster-node-cluster-node)
+   - [Dynamic eBPF Network Chaos (`net-chaos`)](#2-dynamic-ebpf-network-chaos-net-chaos)
+   - [Cluster Consensus Status (`cluster-status`)](#3-cluster-consensus-status-cluster-status)
+   - [Documentation & Runbook Indexer (`index-docs`)](#4-documentation--runbook-indexer-index-docs)
+   - [Knowledge Base Query (`query-knowledge`)](#5-knowledge-base-query-query-knowledge)
+   - [Host Self-Healing Watchdog Daemon (`watchdog`)](#6-host-self-healing-watchdog-daemon-watchdog)
+   - [Kernel Syscall Security Auditor (`audit-security`)](#7-kernel-syscall-security-auditor-audit-security)
+   - [Autonomous Chaos Engineering Daemon (`chaos`)](#8-autonomous-chaos-engineering-daemon-chaos)
+   - [Multi-Node Distributed Topology Benchmark (`bench-distributed`)](#9-multi-node-distributed-topology-benchmark-bench-distributed)
+   - [Model Context Protocol (MCP) Server (`mcp`)](#10-model-context-protocol-mcp-server-mcp)
+   - [Tri-Agent Specialist Swarm (`swarm`)](#11-tri-agent-specialist-swarm-swarm)
+   - [Model Arena ELO Tournament (`arena`)](#12-model-arena-elo-tournament-arena)
+   - [Open-WebUI Pipeline Bundle Export (`export-webui`)](#13-open-webui-pipeline-bundle-export-export-webui)
+   - [Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)](#14-monte-carlo-tree-search-trajectory-collection-mcts-collect)
+   - [Synthetic Scenario Synthesizer (`synthesize-scenario`)](#15-synthetic-scenario-synthesizer-synthesize-scenario)
+   - [Host Pre-Flight Doctor (`doctor`)](#16-host-pre-flight-doctor-doctor)
+   - [Real-Time Monitoring & Telemetry (`monitor`)](#17-real-time-monitoring--telemetry-monitor)
+   - [Environment Health Check (`test-env`)](#18-environment-health-check-test-env)
+   - [Scenario Benchmarking (`bench`)](#19-scenario-benchmarking-bench)
+   - [Dataset Collection (`collect`)](#20-dataset-collection-collect)
+   - [SFT 4-bit LoRA Training (`train-sft`)](#21-sft-4-bit-lora-training-train-sft)
+   - [GRPO Policy Optimization (`train-grpo`)](#22-grpo-policy-optimization-train-grpo)
+   - [Model Packaging & Ollama Deployment (`deploy`)](#23-model-packaging--ollama-deployment-deploy)
+   - [Continuous Self-Improvement Loop (`loop`)](#24-continuous-self-improvement-loop-loop)
+   - [Production Systemd Daemon Deployment (`deploy-daemon`)](#25-production-systemd-daemon-deployment-deploy-daemon)
+   - [Automated GitHub Repo Setup (`git-init`)](#26-automated-github-repo-setup-git-init)
+6. [Distributed Raft Consensus & Cluster Lock Manager](#-distributed-raft-consensus--cluster-lock-manager)
+7. [Dynamic eBPF / Traffic Control Network Chaos](#-dynamic-ebpf--traffic-control-network-chaos)
+8. [Cross-Host Distributed Remediation Engine](#-cross-host-distributed-remediation-engine)
+9. [Offline Hybrid Documentation & Runbook Retriever](#-offline-hybrid-documentation--runbook-retriever)
+10. [Human-in-the-Loop Interactive Webhook Approval Gate](#-human-in-the-loop-interactive-webhook-approval-gate)
+11. [Host Self-Healing Watchdog Daemon](#-host-self-healing-watchdog-daemon)
+12. [Kernel Syscall Security Auditor & eBPF Inspection](#-kernel-syscall-security-auditor--ebpf-inspection)
+13. [Multi-Node Distributed Scenarios](#-multi-node-distributed-scenarios)
+14. [Autonomous Chaos Engineering Daemon](#-autonomous-chaos-engineering-daemon)
+15. [Model Context Protocol (MCP) Integration](#-model-context-protocol-mcp-integration)
+16. [Open-WebUI Pipeline & Tools](#-open-webui-pipeline--tools)
+17. [Model Arena & ELO Rating System](#-model-arena--elo-rating-system)
+18. [Supported Diagnostic Scenarios](#-supported-diagnostic-scenarios)
+19. [Prometheus Metrics & Grafana](#-prometheus-metrics--grafana)
+20. [Training Data Export Formats](#-training-data-export-formats)
+21. [Testing & CI](#-testing--ci)
 
 ---
 
 ## ✨ Key Features
 
+- **Distributed Raft Consensus & Lock Manager**: Lightweight asynchronous Raft consensus for multi-host watchdog orchestrators with term management, leader election, and distributed locking.
+- **Dynamic eBPF / TC Network Fault Injection**: Kernel-level TC netem & eBPF traffic shaping on veth/bridge interfaces injecting latency, jitter, packet drop rates, and asymmetrical partition drops with guaranteed teardown.
+- **Cross-Host Distributed Remediation Engine**: Multi-node cluster remediation coordinating split-brain recovery (etcd Raft, Keepalived HA, WireGuard mesh) with synchronized snapshots and atomic multi-host rollbacks.
 - **Offline Hybrid Documentation & Runbook Retriever**: Embedded BM25 + vector search engine parsing Linux manpages and markdown runbooks for systemd, ZFS, networking, Docker, and PAM authentication.
 - **Human-in-the-Loop Interactive Webhook Approval Gate**: Intercepts high-blast-radius actions (safety score 0.70 - 0.85) with actionable Discord/Slack notifications and callback approvals.
 - **Host Self-Healing Watchdog Daemon**: Continuously analyzes `journalctl` log streams, detects anomalies, and validates remediation inside ephemeral Incus shadow containers before live application.
@@ -196,21 +205,52 @@ pip install -e .
 
 ## 💻 CLI Usage
 
-### 1. Documentation & Runbook Indexer (`index-docs`)
+### 1. Federated Cluster Node (`cluster-node`)
+Starts an autonomous federated cluster node running Raft leader election and distributed lock management:
+
+```bash
+# Start primary node
+python3 main.py cluster-node --node-id node-1 --peers node-2,node-3 --raft-port 9200
+
+# Start follower peer
+python3 main.py cluster-node --node-id node-2 --peers node-1,node-3 --raft-port 9201
+```
+
+### 2. Dynamic eBPF Network Chaos (`net-chaos`)
+Injects dynamic kernel-level TC netem & eBPF traffic shaping rules into an active Incus container/VM:
+
+```bash
+python3 main.py net-chaos \
+  --instance canary-net-1 \
+  --interface eth0 \
+  --latency-ms 100.0 \
+  --jitter-ms 10.0 \
+  --drop-rate 0.15 \
+  --duration-sec 10.0
+```
+
+### 3. Cluster Consensus Status (`cluster-status`)
+Displays active cluster consensus roles, term generation, elected leader, and active distributed resource locks:
+
+```bash
+python3 main.py cluster-status
+```
+
+### 4. Documentation & Runbook Indexer (`index-docs`)
 Indexes offline Linux troubleshooting runbooks and manpage documentation into the hybrid search engine:
 
 ```bash
 python3 main.py index-docs --runbooks-dir knowledge/runbooks --output reports/knowledge_index.json
 ```
 
-### 2. Knowledge Base Query (`query-knowledge`)
+### 5. Knowledge Base Query (`query-knowledge`)
 Queries the offline hybrid BM25 / vector knowledge base for diagnostic runbooks:
 
 ```bash
 python3 main.py query-knowledge --query "DNS resolution failure in systemd" --top-k 3
 ```
 
-### 3. Host Self-Healing Watchdog Daemon (`watchdog`)
+### 6. Host Self-Healing Watchdog Daemon (`watchdog`)
 Runs the proactive journal stream watchdog with shadow container dry-run verification:
 
 ```bash
@@ -221,7 +261,7 @@ python3 main.py watchdog --dry-run --min-safety-score 0.85
 python3 main.py watchdog --live --min-safety-score 0.90
 ```
 
-### 4. Kernel Syscall Security Auditor (`audit-security`)
+### 7. Kernel Syscall Security Auditor (`audit-security`)
 Inspects arbitrary commands or remediation scripts for destructive anti-patterns, reverse shells, and credential theft:
 
 ```bash
@@ -232,7 +272,7 @@ python3 main.py audit-security --command "rm -rf /"
 python3 main.py audit-security --command "systemctl restart systemd-resolved"
 ```
 
-### 5. Autonomous Chaos Engineering Daemon (`chaos`)
+### 8. Autonomous Chaos Engineering Daemon (`chaos`)
 Runs continuous randomized Poisson-distributed fault injection experiments across a fleet of canary sandboxes:
 
 ```bash
@@ -243,14 +283,14 @@ python3 main.py chaos \
   --type container
 ```
 
-### 6. Multi-Node Distributed Topology Benchmark (`bench-distributed`)
+### 9. Multi-Node Distributed Topology Benchmark (`bench-distributed`)
 Runs multi-node cluster verifications across WireGuard mesh, etcd Raft consensus, and Keepalived HA reverse proxies:
 
 ```bash
 python3 main.py bench-distributed --scenario all --type container
 ```
 
-### 7. Model Context Protocol (MCP) Server (`mcp`)
+### 10. Model Context Protocol (MCP) Server (`mcp`)
 Starts the MCP server over standard I/O (stdio) or Server-Sent Events (SSE) for Claude Desktop, Open-WebUI, or external AI agents:
 
 ```bash
@@ -261,7 +301,7 @@ python3 main.py mcp
 python3 main.py mcp --transport sse --port 8080
 ```
 
-### 8. Tri-Agent Specialist Swarm (`swarm`)
+### 11. Tri-Agent Specialist Swarm (`swarm`)
 Executes coordinated multi-turn handoffs between read-only Triage, surgical Remediation, and collateral safety Audit agents:
 
 ```bash
@@ -272,7 +312,7 @@ python3 main.py swarm \
   --model qwen2.5-coder:7b
 ```
 
-### 9. Model Arena ELO Tournament (`arena`)
+### 12. Model Arena ELO Tournament (`arena`)
 Runs head-to-head A/B tournament matches between baseline and challenger models across identical sandbox snapshots with persistent ELO tracking:
 
 ```bash
@@ -284,14 +324,14 @@ python3 main.py arena \
   --ratings-file reports/arena_ratings.json
 ```
 
-### 10. Open-WebUI Pipeline Bundle Export (`export-webui`)
+### 13. Open-WebUI Pipeline Bundle Export (`export-webui`)
 Exports the ready-to-import Open-WebUI pipeline code and tool function calling schema:
 
 ```bash
 python3 main.py export-webui --output dist/open_webui_bundle.json
 ```
 
-### 11. Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)
+### 14. Monte Carlo Tree Search Trajectory Collection (`mcts-collect`)
 Explores the OS action space using snapshot-branching Monte Carlo Tree Search and extracts the optimal shortest-path resolution trajectory:
 
 ```bash
@@ -306,7 +346,7 @@ python3 main.py mcts-collect \
   --model qwen2.5-coder:7b
 ```
 
-### 12. Synthetic Scenario Synthesizer (`synthesize-scenario`)
+### 15. Synthetic Scenario Synthesizer (`synthesize-scenario`)
 Uses teacher LLMs to synthesize novel Linux diagnostic scenarios, validates them inside Incus sandboxes across 3 verification phases, and automatically registers them:
 
 ```bash
@@ -319,14 +359,14 @@ python3 main.py synthesize-scenario \
   --model qwen2.5-coder:7b
 ```
 
-### 13. Host Pre-Flight Doctor (`doctor`)
+### 16. Host Pre-Flight Doctor (`doctor`)
 Runs pre-flight diagnostics for KVM virtualization, Incus CLI/storage/bridges, and remote LLM endpoints:
 
 ```bash
 python3 main.py doctor
 ```
 
-### 14. Real-Time Monitoring & Telemetry (`monitor`)
+### 17. Real-Time Monitoring & Telemetry (`monitor`)
 Launch the live Rich terminal dashboard or start the standalone Prometheus metrics exporter:
 
 ```bash
@@ -337,14 +377,14 @@ python3 main.py monitor
 python3 main.py monitor --port 9100 --server-only
 ```
 
-### 15. Environment Health Check (`test-env`)
+### 18. Environment Health Check (`test-env`)
 Validates Incus hypervisor, KVM acceleration, Ollama / Open-WebUI connectivity, and executes a live ephemeral sandbox snapshot rollback test:
 
 ```bash
 python3 main.py test-env --type container
 ```
 
-### 16. Scenario Benchmarking (`bench`)
+### 19. Scenario Benchmarking (`bench`)
 Evaluates model performance across diagnostic fault scenarios in parallel:
 
 ```bash
@@ -356,7 +396,7 @@ python3 main.py bench \
   --type vm
 ```
 
-### 17. Dataset Collection (`collect`)
+### 20. Dataset Collection (`collect`)
 Generates exploration rollouts and exports positive trajectories for training:
 
 ```bash
@@ -369,7 +409,7 @@ python3 main.py collect \
   --output-dir data
 ```
 
-### 18. SFT 4-bit LoRA Training (`train-sft`)
+### 21. SFT 4-bit LoRA Training (`train-sft`)
 Fine-tunes base models on ShareGPT-formatted trajectory datasets with automatic GGUF quantization:
 
 ```bash
@@ -383,7 +423,7 @@ python3 main.py train-sft \
   --export-gguf
 ```
 
-### 19. GRPO Policy Optimization (`train-grpo`)
+### 22. GRPO Policy Optimization (`train-grpo`)
 Runs Group Relative Policy Optimization using multi-component reward functions:
 
 ```bash
@@ -395,7 +435,7 @@ python3 main.py train-grpo \
   --generations 4
 ```
 
-### 20. Model Packaging & Ollama Deployment (`deploy`)
+### 23. Model Packaging & Ollama Deployment (`deploy`)
 Generates Modelfiles with structured system prompts and registers new model tags with Ollama:
 
 ```bash
@@ -405,7 +445,7 @@ python3 main.py deploy \
   --ollama-url http://10.0.0.25:11434
 ```
 
-### 21. Continuous Self-Improvement Loop (`loop`)
+### 24. Continuous Self-Improvement Loop (`loop`)
 Executes an autonomous closed-loop cycle (Benchmark $\to$ Collect $\to$ Filter $\to$ Train $\to$ Deploy $\to$ Verify) with automatic rollback protection:
 
 ```bash
@@ -420,19 +460,47 @@ python3 main.py loop \
   --ollama-url http://10.0.0.25:11434
 ```
 
-### 22. Production Systemd Daemon Deployment (`deploy-daemon`)
+### 25. Production Systemd Daemon Deployment (`deploy-daemon`)
 Installs and enables the `os-autofix.service` and `os-autofix-metrics.service` unit files:
 
 ```bash
 python3 main.py deploy-daemon --systemd-dir /etc/systemd/system --enable
 ```
 
-### 23. Automated GitHub Repo Setup (`git-init`)
+### 26. Automated GitHub Repo Setup (`git-init`)
 Initializes the git repository, stages all code, creates the remote repo, and pushes initial commits:
 
 ```bash
 python3 main.py git-init --name os-autofix-engine --public
 ```
+
+---
+
+## 🏛️ Distributed Raft Consensus & Cluster Lock Manager
+
+The **Raft Consensus Engine** ([`engine/federation/cluster_raft.py`](file:///Docs/Programming/GitHub/os-autofix-engine/engine/federation/cluster_raft.py)) coordinates multi-host watchdogs:
+
+- **Asynchronous Raft Protocol**: Implements `FOLLOWER`, `CANDIDATE`, `LEADER` role transitions, term tracking, and heartbeats ($500\text{ms}$).
+- **Distributed Locking**: Ensures that concurrent orchestrators across separate hosts do not execute conflicting state mutations on shared subnets or volumes.
+- **Failover Election**: Automatically initiates re-election if the primary leader heartbeat drops for $>3.0\text{s}$.
+
+---
+
+## ⚡ Dynamic eBPF / Traffic Control Network Chaos
+
+The **Network Chaos Injector** ([`security/ebpf_network_chaos.py`](file:///Docs/Programming/GitHub/os-autofix-engine/security/ebpf_network_chaos.py)) manages kernel-level traffic control:
+
+- **Packet Shaper Primitives**: Latency + jitter injection, packet drop loss rates, TCP corruption, and asymmetric route partition drops.
+- **Leak-Proof Cleanup**: Context-managed automatic teardown deleting TC netem qdiscs on container termination.
+
+---
+
+## 🌐 Cross-Host Distributed Remediation Engine
+
+The **Cross-Host Coordinator** ([`engine/federation/cross_host_coordinator.py`](file:///Docs/Programming/GitHub/os-autofix-engine/engine/federation/cross_host_coordinator.py)):
+
+- **Multi-Node Cluster Recovery**: Repairs split-brain Raft consensus in etcd, Keepalived VRRP failovers, and WireGuard mesh overlay keys.
+- **Atomic Multi-Host Rollback**: Takes synchronized snapshots across all cluster nodes prior to mutation, commanding an atomic cluster-wide rollback if verification fails.
 
 ---
 

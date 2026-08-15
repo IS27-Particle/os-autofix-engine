@@ -1,4 +1,4 @@
-"""Security, eBPF syscall safety auditing, and approval gate package."""
+"""Security, eBPF syscall safety auditing, approval gate, and network chaos package."""
 
 from security.approval_gate import (
     GLOBAL_APPROVAL_GATE,
@@ -12,6 +12,10 @@ from security.ebpf_auditor import (
     SyscallAuditEvent,
     SyscallSecurityAuditor,
 )
+from security.ebpf_network_chaos import (
+    EbpfNetworkChaos,
+    NetworkChaosSpec,
+)
 
 __all__ = [
     "SyscallSecurityAuditor",
@@ -22,4 +26,6 @@ __all__ = [
     "ApprovalDecision",
     "ApprovalStatus",
     "GLOBAL_APPROVAL_GATE",
+    "EbpfNetworkChaos",
+    "NetworkChaosSpec",
 ]

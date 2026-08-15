@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "os-autofix-engine"
-version = "0.6.0"
-description = "Autonomous OS-level policy training, offline vector runbook retrieval, human-in-the-loop approval gate, host self-healing watchdog daemon, eBPF security auditing, and Incus VM evaluation harness"
+version = "0.7.0"
+description = "Autonomous OS-level policy training, multi-node Raft federation, eBPF network chaos, cross-host remediation, offline vector runbook retrieval, and Incus VM evaluation harness"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
